@@ -1,15 +1,20 @@
+import { useState } from 'react';
 import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDispatchStore } from '../store/useDispatchStore';
 import { useTeamRoutes } from '../hooks/useTeamRoutes';
+import { useInterval } from '../hooks/useInterval';
 import { RouteMap } from '../components/route/RouteMap';
 import { LiveTeamCard } from '../components/route/LiveTeamCard';
 import { durationLabel } from '../utils/time';
 import type { DispatchTeam } from '../types/dispatch';
 
 const NO_TEAMS: DispatchTeam[] = [];
+const AUTO_REFRESH_MS = 30_000;
 
 export function ConfirmedRoutePage() {
   const navigate = useNavigate();
@@ -21,6 +26,10 @@ export function ConfirmedRoutePage() {
     liveTeams ?? NO_TEAMS,
     Boolean(liveTeams),
   );
+
+  const allDone = Boolean(liveTeams && liveTeams.every((team) => team.stops.every((stop) => stop.status === 'completed')));
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  useInterval(advanceLiveProgress, autoRefresh && !allDone ? AUTO_REFRESH_MS : null);
 
   if (!liveTeams || !confirmedSummary) {
     return (
@@ -58,11 +67,21 @@ export function ConfirmedRoutePage() {
             {`선택 농장 ${confirmedSummary.selectedFarmCount}곳  |  가용 팀 ${confirmedSummary.teamCount}팀  |  총 예상 소요시간 ${durationLabel(confirmedSummary.totalDurationMinutes)}`}
           </Typography>
         </Box>
-        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', flexShrink: 0 }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: allDone ? 'text.disabled' : 'success.main' }} />
           <Typography variant="caption" color="text.secondary">
-            {`실시간 업데이트  |  마지막 업데이트: ${lastUpdatedAt ?? '-'}`}
+            {`마지막 업데이트: ${lastUpdatedAt ?? '-'}`}
           </Typography>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={autoRefresh && !allDone ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
+            onClick={() => setAutoRefresh((v) => !v)}
+            disabled={allDone}
+            sx={{ ml: 1 }}
+          >
+            {autoRefresh && !allDone ? '자동갱신 중' : allDone ? '완료' : '자동갱신 시작'}
+          </Button>
         </Stack>
       </Stack>
 
