@@ -12,7 +12,8 @@ dist
 dist-ssr
 *.local
 
-# Backend (Python / FastAPI)
+# Environment variables (never commit real secrets)
+.env
 backend/.env
 backend/__pycache__/
 backend/**/__pycache__/

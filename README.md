@@ -97,6 +97,32 @@ uvicorn main:app --reload
 
 ## Azure 배포
 
-배포 방법은 [.claude/plans](../.claude/plans/) 내 플랜 문서 참고.
+**Azure App Service 포털의 배포 연동 기능(Deployment Center)** 을 사용한다.
+GitHub Actions 워크플로우는 직접 관리하지 않고, Azure 포털이 자동 생성하는 워크플로우를 사용한다.
 
-`main` 브랜치에 push하면 GitHub Actions가 자동으로 Azure App Service에 배포한다.
+### 배포 설정 절차
+
+1. Azure 포털 → App Service 생성 (Python 3.11, Linux)
+2. **Deployment Center** → Source: GitHub → 저장소 및 브랜치(`main`) 선택
+   - Azure가 `.github/workflows/` 에 워크플로우 파일을 자동 생성
+3. **Configuration → Application settings** 에 아래 값 입력:
+
+   | 이름 | 설명 |
+   |------|------|
+   | `SCM_DO_BUILD_DURING_DEPLOYMENT` | `true` — Oryx가 requirements.txt로 패키지 설치 |
+   | `NAVER_CLIENT_ID` | NCP 클라이언트 ID |
+   | `NAVER_CLIENT_SECRET` | NCP 클라이언트 시크릿 |
+   | `DATABRICKS_HOST` | (Databricks 연동 시) |
+   | `DATABRICKS_HTTP_PATH` | (Databricks 연동 시) |
+   | `DATABRICKS_TOKEN` | (Databricks 연동 시) |
+
+4. **Configuration → General Settings → Startup Command**:
+   ```
+   cd /home/site/wwwroot/backend && python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+   ```
+
+5. NCP 콘솔 → Application → 허용 도메인에 App Service 도메인 추가:
+   `https://bioroute.azurewebsites.net`
+
+> 민감정보(`NAVER_CLIENT_SECRET`, `DATABRICKS_TOKEN` 등)는 코드나 `.env`에 커밋하지 않고
+> Azure App Service Configuration에만 입력한다.
