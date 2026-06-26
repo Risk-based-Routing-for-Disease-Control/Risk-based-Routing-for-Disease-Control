@@ -24,8 +24,8 @@ app.include_router(farms.router, prefix="/api")
 app.include_router(directions.router, prefix="/api")
 
 
-@app.get("/")
-def read_root():
+@app.get("/api/health")
+def health_check():
     return {"status": "ok", "service": "bioroute"}
 
 
