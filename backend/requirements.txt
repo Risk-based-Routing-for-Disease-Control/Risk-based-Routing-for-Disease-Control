@@ -4,3 +4,4 @@ httpx
 python-dotenv
 databricks-sql-connector
 pydantic
+psycopg2-binary
