@@ -39,6 +39,16 @@ jobs:
           source antenv/bin/activate
           pip install -r requirements.txt
 
+      - name: Check artifact structure
+        run: |
+          pwd
+          echo "=== Root files ==="
+          ls -la
+          echo "=== backend/ ==="
+          ls -la backend/
+          echo "=== dist/ ==="
+          ls -la dist/
+
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
