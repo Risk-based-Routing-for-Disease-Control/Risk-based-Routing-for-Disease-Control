@@ -15,7 +15,7 @@ export function MapPage() {
       </Box>
       <Box
         sx={{
-          width: 460,
+          width: 520,
           flexShrink: 0,
           display: 'flex',
           minHeight: 0,

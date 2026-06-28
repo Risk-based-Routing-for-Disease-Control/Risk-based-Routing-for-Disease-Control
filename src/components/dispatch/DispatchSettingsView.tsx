@@ -25,6 +25,7 @@ import { useFarmStore } from '../../store/useFarmStore';
 import { useDispatchStore } from '../../store/useDispatchStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL, RISK_LEVELS } from '../../constants/risk';
 import type { RiskLevel } from '../../types/farm';
+import { getLivestockDisplayLabel } from '../../utils/livestock';
 import { LivestockIcon } from '../common/LivestockIcon';
 
 interface DispatchSettingsViewProps {
@@ -173,24 +174,37 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
             <Typography variant="body2">전체 선택</Typography>
           </Stack>
 
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: isPanel ? 520 : undefined }}>
+          <Box sx={{ overflowX: 'hidden' }}>
+            <Table
+              size="small"
+              sx={{
+                tableLayout: isPanel ? 'fixed' : 'auto',
+                width: '100%',
+                '& .MuiTableCell-root': {
+                  px: isPanel ? 1 : 2,
+                  py: isPanel ? 1 : 1.25,
+                },
+              }}
+            >
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox" />
+                  <TableCell padding="checkbox" sx={{ width: isPanel ? 52 : undefined }} />
                   <TableCell>농장명</TableCell>
-                  <TableCell onClick={() => setSortDesc((value) => !value)} sx={{ cursor: 'pointer' }}>
+                  <TableCell
+                    onClick={() => setSortDesc((value) => !value)}
+                    sx={{ cursor: 'pointer', width: isPanel ? 98 : undefined }}
+                  >
                     <Stack direction="row" sx={{ alignItems: 'center' }}>
-                      위험도 등급
+                      {isPanel ? '위험도' : '위험도 등급'}
                       <ArrowDropDownIcon
                         fontSize="small"
                         sx={{ transform: sortDesc ? 'none' : 'rotate(180deg)' }}
                       />
                     </Stack>
                   </TableCell>
-                  <TableCell>축종</TableCell>
-                  <TableCell align="right">사육 두수</TableCell>
-                  <TableCell align="right">예상 소요시간</TableCell>
+                  <TableCell sx={{ width: isPanel ? 88 : undefined }}>축종</TableCell>
+                  <TableCell align="right" sx={{ width: isPanel ? 104 : undefined }}>사육 두수</TableCell>
+                  {!isPanel && <TableCell align="right">예상 소요시간</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -210,7 +224,11 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
                         onChange={() => toggleFarm(farm.id)}
                       />
                     </TableCell>
-                    <TableCell>{farm.name}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ lineHeight: 1.35 }}>
+                        {farm.name}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       <Chip
                         size="small"
@@ -221,11 +239,13 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
                     <TableCell>
                       <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
                         <LivestockIcon livestockType={farm.livestockType} size={22} />
-                        <Typography variant="body2">{farm.livestockType}</Typography>
+                        <Typography variant="body2" sx={{ lineHeight: 1.35 }}>
+                          {getLivestockDisplayLabel(farm.livestockType)}
+                        </Typography>
                       </Stack>
                     </TableCell>
                     <TableCell align="right">{`${farm.livestockCount.toLocaleString()} ${farm.livestockUnit}`}</TableCell>
-                    <TableCell align="right">{`${farm.estimatedDurationMinutes}분`}</TableCell>
+                    {!isPanel && <TableCell align="right">{`${farm.estimatedDurationMinutes}분`}</TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
