@@ -27,8 +27,8 @@ export interface MultiStopRouteResult {
 
 /**
  * Fetches a leg-by-leg driving route for an ordered list of stops via the backend's
- * Naver Directions 5 proxy. The backend chains adjacent legs server-side, so there is
- * no waypoint-count limit to worry about on the frontend.
+ * Naver Directions 5 proxy. The backend batches up to 5 waypoints per Naver request,
+ * so there is no waypoint-count limit to worry about on the frontend.
  */
 export async function fetchMultiStopRoute(points: RoutePointInput[]): Promise<MultiStopRouteResult> {
   const response = await fetch(`${API_BASE_URL}/api/directions/multi`, {

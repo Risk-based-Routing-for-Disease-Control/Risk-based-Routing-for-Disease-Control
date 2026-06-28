@@ -2,59 +2,20 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Farm, RiskLevel } from '../types/farm';
 import type { DispatchResult, DispatchTeam } from '../types/dispatch';
-import { TEAM_COLORS } from '../constants/teamColors';
-import { minutesToTimeLabel, nowTimeLabel } from '../utils/time';
-
-const TEAM_CAPACITY_MINUTES = 240;
-const START_OF_DAY_MINUTES = 8 * 60 + 30;
-
-function buildDispatchResult(farms: Farm[], selectedFarmIds: string[], teamCount: number): DispatchResult {
-  const selected = farms
-    .filter((farm) => selectedFarmIds.includes(farm.id))
-    .sort((a, b) => b.riskScore - a.riskScore);
-
-  const teams: DispatchTeam[] = Array.from({ length: teamCount }, (_, index) => ({
-    id: `team-${index + 1}`,
-    label: `팀 ${index + 1}`,
-    color: TEAM_COLORS[index % TEAM_COLORS.length],
-    stops: [],
-    totalDurationMinutes: 0,
-  }));
-
-  const unassignedFarms: Farm[] = [];
-
-  selected.forEach((farm) => {
-    const target = teams.reduce((min, team) => (team.totalDurationMinutes < min.totalDurationMinutes ? team : min), teams[0]);
-    if (!target || target.totalDurationMinutes + farm.estimatedDurationMinutes > TEAM_CAPACITY_MINUTES) {
-      unassignedFarms.push(farm);
-      return;
-    }
-    target.stops.push({ farm, order: target.stops.length + 1, status: 'plain' });
-    target.totalDurationMinutes += farm.estimatedDurationMinutes;
-  });
-
-  return {
-    teams,
-    unassignedFarms,
-    selectedFarmCount: selected.length,
-    teamCount,
-    totalDurationMinutes: teams.reduce((sum, team) => sum + team.totalDurationMinutes, 0),
-  };
-}
+import { solveDispatch } from '../api/dispatch';
+import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
-  return teams.map((team) => {
-    const completedCount = team.stops.length === 0 ? 0 : Math.max(1, Math.round(team.stops.length * 0.3));
-    let clock = START_OF_DAY_MINUTES;
-    const stops = team.stops.map((stop, index) => {
-      if (index >= completedCount) return { ...stop, status: 'upcoming' as const };
-      clock += stop.farm.estimatedDurationMinutes;
-      const completedAt = minutesToTimeLabel(clock);
-      clock += 15;
-      return { ...stop, status: 'completed' as const, completedAt };
-    });
-    return { ...team, stops };
-  });
+  return teams.map((team) => ({
+    ...team,
+    stops: team.stops.map((stop) => ({
+      ...stop,
+      status: 'upcoming' as const,
+      completedAt: undefined,
+      cancelledAt: undefined,
+      actualDurationMinutes: undefined,
+    })),
+  }));
 }
 
 interface ConfirmedSummary {
@@ -69,6 +30,8 @@ interface DispatchState {
   riskFilter: RiskLevel | 'all';
   typeFilter: string;
   result: DispatchResult | null;
+  isDispatching: boolean;
+  dispatchError: string | null;
   liveTeams: DispatchTeam[] | null;
   confirmed: boolean;
   confirmedSummary: ConfirmedSummary | null;
@@ -79,10 +42,12 @@ interface DispatchState {
   toggleFarm: (id: string) => void;
   setSelectedFarmIds: (ids: string[]) => void;
   resetSelection: () => void;
-  runDispatch: (farms: Farm[]) => void;
+  runDispatch: (farms: Farm[]) => Promise<void>;
   resetResult: () => void;
   confirmDispatch: () => void;
   advanceLiveProgress: () => void;
+  completeStop: (teamId: string, farmId: string, actualDurationMinutes: number) => void;
+  cancelStop: (teamId: string, farmId: string) => void;
 }
 
 export const useDispatchStore = create<DispatchState>()(
@@ -93,6 +58,8 @@ export const useDispatchStore = create<DispatchState>()(
       riskFilter: 'all',
       typeFilter: 'all',
       result: null,
+      isDispatching: false,
+      dispatchError: null,
       liveTeams: null,
       confirmed: false,
       confirmedSummary: null,
@@ -113,12 +80,21 @@ export const useDispatchStore = create<DispatchState>()(
 
       resetSelection: () => set({ selectedFarmIds: [], riskFilter: 'all', typeFilter: 'all' }),
 
-      runDispatch: (farms) => {
+      runDispatch: async (farms) => {
         const { selectedFarmIds, teamCount } = get();
-        set({ result: buildDispatchResult(farms, selectedFarmIds, teamCount) });
+        set({ isDispatching: true, dispatchError: null });
+        try {
+          const result = await solveDispatch({ farms, selectedFarmIds, teamCount });
+          set({ result, isDispatching: false });
+        } catch (error) {
+          set({
+            isDispatching: false,
+            dispatchError: error instanceof Error ? error.message : '배차 요청에 실패했습니다.',
+          });
+        }
       },
 
-      resetResult: () => set({ result: null }),
+      resetResult: () => set({ result: null, dispatchError: null }),
 
       confirmDispatch: () => {
         const { result } = get();
@@ -149,6 +125,49 @@ export const useDispatchStore = create<DispatchState>()(
           });
           return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
         }),
+
+      completeStop: (teamId, farmId, actualDurationMinutes) =>
+        set((state) => {
+          if (!state.liveTeams) return state;
+          const label = nowTimeLabel();
+          const liveTeams = state.liveTeams.map((team) => {
+            if (team.id !== teamId) return team;
+            const stops = team.stops.map((stop) =>
+              stop.farm.id === farmId && stop.status === 'upcoming'
+                ? {
+                    ...stop,
+                    status: 'completed' as const,
+                    completedAt: label,
+                    actualDurationMinutes,
+                  }
+                : stop,
+            );
+            return { ...team, stops };
+          });
+          return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
+        }),
+
+      cancelStop: (teamId, farmId) =>
+        set((state) => {
+          if (!state.liveTeams) return state;
+          const label = nowTimeLabel();
+          const liveTeams = state.liveTeams.map((team) => {
+            if (team.id !== teamId) return team;
+            const stops = team.stops.map((stop) =>
+              stop.farm.id === farmId && stop.status === 'completed'
+                ? {
+                    ...stop,
+                    status: 'upcoming' as const,
+                    completedAt: undefined,
+                    actualDurationMinutes: undefined,
+                    cancelledAt: label,
+                  }
+                : stop,
+            );
+            return { ...team, stops };
+          });
+          return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
+        }),
     }),
     {
       name: 'livestock-dispatch',
@@ -156,6 +175,8 @@ export const useDispatchStore = create<DispatchState>()(
         teamCount: state.teamCount,
         selectedFarmIds: state.selectedFarmIds,
         result: state.result,
+        isDispatching: state.isDispatching,
+        dispatchError: state.dispatchError,
         liveTeams: state.liveTeams,
         confirmed: state.confirmed,
         confirmedSummary: state.confirmedSummary,

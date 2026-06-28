@@ -19,7 +19,10 @@ export function DispatchResultView({ result }: DispatchResultViewProps) {
   const resetResult = useDispatchStore((s) => s.resetResult);
   const confirmDispatch = useDispatchStore((s) => s.confirmDispatch);
 
-  const handleRestart = () => resetResult();
+  const handleRestart = () => {
+    resetResult();
+    navigate('/map');
+  };
   const handleConfirm = () => {
     confirmDispatch();
     navigate('/confirmed');
@@ -61,7 +64,7 @@ export function DispatchResultView({ result }: DispatchResultViewProps) {
         sx={{ alignItems: 'center', justifyContent: 'space-between', px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}
       >
         <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRestart}>
-          다시하기 (경로 배치 설정으로)
+          다시하기
         </Button>
         <Button variant="contained" startIcon={<CheckCircleOutlineIcon />} onClick={handleConfirm}>
           확정하기 (확정 경로로 이동)
