@@ -1,12 +1,15 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import type { DispatchTeam } from '../../types/dispatch';
 import { durationLabel } from '../../utils/time';
+import { DEFAULT_MAP_CENTER } from '../../constants/map';
 
 interface TeamSummaryCardProps {
   team: DispatchTeam;
 }
 
 export function TeamSummaryCard({ team }: TeamSummaryCardProps) {
+  const depot = team.depot ?? { name: '공통 방역 출발지', ...DEFAULT_MAP_CENTER };
+
   return (
     <Paper variant="outlined" sx={{ borderRadius: 1.5, mb: 2, overflow: 'hidden' }}>
       <Stack
@@ -28,36 +31,52 @@ export function TeamSummaryCard({ team }: TeamSummaryCardProps) {
       </Stack>
 
       <Box sx={{ px: 2, py: 0.5 }}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', py: 0.85 }}>
+          <Typography variant="body2" color="text.secondary">
+            출발/복귀
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {depot.name}
+          </Typography>
+        </Stack>
         {team.stops.map((stop) => (
-          <Stack
-            key={stop.farm.id}
-            direction="row"
-            sx={{ alignItems: 'center', justifyContent: 'space-between', py: 0.85 }}
-          >
-            <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  flexShrink: 0,
-                  borderRadius: '50%',
-                  bgcolor: team.color,
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {stop.order}
-              </Box>
-              <Typography variant="body2">{stop.farm.name}</Typography>
+          <Box key={stop.farm.id}>
+            <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', py: 0.85 }}>
+              <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    flexShrink: 0,
+                    borderRadius: '50%',
+                    bgcolor: team.color,
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {stop.order}
+                </Box>
+                <Typography variant="body2">{stop.farm.name}</Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                {`${stop.farm.estimatedDurationMinutes}분`}
+              </Typography>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-              {`${stop.farm.estimatedDurationMinutes}분`}
-            </Typography>
-          </Stack>
+            {stop.disinfectionHub && (
+              <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', pl: 4, pb: 0.85 }}>
+                <Typography variant="caption" color="text.secondary">
+                  소독 경유
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {stop.disinfectionHub.name}
+                </Typography>
+              </Stack>
+            )}
+          </Box>
         ))}
       </Box>
 
