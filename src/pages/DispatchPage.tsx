@@ -1,5 +1,5 @@
+import { Navigate } from 'react-router-dom';
 import { useDispatchStore } from '../store/useDispatchStore';
-import { DispatchSettingsView } from '../components/dispatch/DispatchSettingsView';
 import { DispatchResultView } from '../components/dispatch/DispatchResultView';
 
 export function DispatchPage() {
@@ -9,5 +9,5 @@ export function DispatchPage() {
     return <DispatchResultView result={result} />;
   }
 
-  return <DispatchSettingsView />;
+  return <Navigate to="/map" replace />;
 }

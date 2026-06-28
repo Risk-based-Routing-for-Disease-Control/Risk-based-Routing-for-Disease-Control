@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchMultiStopRoute, type MultiStopRouteResult } from '../api/directions';
 import type { DispatchTeam } from '../types/dispatch';
+import { DEFAULT_MAP_CENTER } from '../constants/map';
 
 interface UseTeamRoutesResult {
   routesByTeamId: Record<string, MultiStopRouteResult>;
@@ -11,6 +12,22 @@ interface UseTeamRoutesResult {
 const EMPTY_ROUTES: Record<string, MultiStopRouteResult> = {};
 const EMPTY_FAILED: Set<string> = new Set();
 
+function routePointsForTeam(team: DispatchTeam) {
+  const depot = team.depot ?? { name: '공통 방역 출발지', ...DEFAULT_MAP_CENTER };
+  const stopPoints = team.stops.flatMap((stop) => [
+    { lat: stop.farm.lat, lng: stop.farm.lng, name: stop.farm.name },
+    ...(stop.disinfectionHub
+      ? [{ lat: stop.disinfectionHub.lat, lng: stop.disinfectionHub.lng, name: stop.disinfectionHub.name }]
+      : []),
+  ]);
+
+  return [
+    { lat: depot.lat, lng: depot.lng, name: depot.name },
+    ...stopPoints,
+    { lat: depot.lat, lng: depot.lng, name: depot.name },
+  ];
+}
+
 export function useTeamRoutes(teams: DispatchTeam[], enabled: boolean): UseTeamRoutesResult {
   const fetchedSignatureRef = useRef<string | null>(null);
   const [routesByTeamId, setRoutesByTeamId] = useState<Record<string, MultiStopRouteResult>>(EMPTY_ROUTES);
@@ -18,7 +35,7 @@ export function useTeamRoutes(teams: DispatchTeam[], enabled: boolean): UseTeamR
   const [failedTeamIds, setFailedTeamIds] = useState<Set<string>>(EMPTY_FAILED);
 
   const signature = teams
-    .map((team) => `${team.id}:${team.stops.map((stop) => `${stop.farm.lat},${stop.farm.lng}`).join('>')}`)
+    .map((team) => `${team.id}:${routePointsForTeam(team).map((point) => `${point.lat},${point.lng}`).join('>')}`)
     .join('|');
 
   useEffect(() => {
@@ -30,11 +47,9 @@ export function useTeamRoutes(teams: DispatchTeam[], enabled: boolean): UseTeamR
     (async () => {
       const results = await Promise.all(
         teams.map(async (team) => {
-          if (team.stops.length < 2) return { teamId: team.id, route: null, failed: false };
+          if (team.stops.length < 1) return { teamId: team.id, route: null, failed: false };
           try {
-            const route = await fetchMultiStopRoute(
-              team.stops.map((stop) => ({ lat: stop.farm.lat, lng: stop.farm.lng, name: stop.farm.name })),
-            );
+            const route = await fetchMultiStopRoute(routePointsForTeam(team));
             return { teamId: team.id, route, failed: false };
           } catch (error) {
             console.error(`[useTeamRoutes] failed to fetch route for ${team.id}`, error);

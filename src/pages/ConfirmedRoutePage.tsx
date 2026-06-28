@@ -1,46 +1,38 @@
-import { useState } from 'react';
 import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDispatchStore } from '../store/useDispatchStore';
 import { useTeamRoutes } from '../hooks/useTeamRoutes';
-import { useInterval } from '../hooks/useInterval';
 import { RouteMap } from '../components/route/RouteMap';
 import { LiveTeamCard } from '../components/route/LiveTeamCard';
 import { durationLabel } from '../utils/time';
 import type { DispatchTeam } from '../types/dispatch';
 
 const NO_TEAMS: DispatchTeam[] = [];
-const AUTO_REFRESH_MS = 30_000;
 
 export function ConfirmedRoutePage() {
   const navigate = useNavigate();
   const liveTeams = useDispatchStore((s) => s.liveTeams);
   const confirmedSummary = useDispatchStore((s) => s.confirmedSummary);
   const lastUpdatedAt = useDispatchStore((s) => s.lastUpdatedAt);
-  const advanceLiveProgress = useDispatchStore((s) => s.advanceLiveProgress);
   const { routesByTeamId, isLoading: isLoadingRoutes, failedTeamIds } = useTeamRoutes(
     liveTeams ?? NO_TEAMS,
     Boolean(liveTeams),
   );
 
-  const allDone = Boolean(liveTeams && liveTeams.every((team) => team.stops.every((stop) => stop.status === 'completed')));
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  useInterval(advanceLiveProgress, autoRefresh && !allDone ? AUTO_REFRESH_MS : null);
+  const allDone = Boolean(liveTeams && liveTeams.every((team) => team.stops.every((stop) => stop.status !== 'upcoming')));
 
   if (!liveTeams || !confirmedSummary) {
     return (
       <Stack spacing={2} sx={{ flex: 1, alignItems: 'center', justifyContent: 'center', px: 4 }}>
         <Typography color="text.secondary" align="center" sx={{ mb: 2 }}>
-          아직 확정된 경로가 없습니다.
+          아직 확정된 배치가 없습니다.
           <br />
-          경로 배치를 먼저 진행해주세요.
+          방역 계획에서 경로 배치를 먼저 진행해주세요.
         </Typography>
-        <Button variant="contained" onClick={() => navigate('/dispatch')}>
-          경로 배치로 이동
+        <Button variant="contained" onClick={() => navigate('/map')}>
+          경로 배치 시작하기
         </Button>
       </Stack>
     );
@@ -72,16 +64,6 @@ export function ConfirmedRoutePage() {
           <Typography variant="caption" color="text.secondary">
             {`마지막 업데이트: ${lastUpdatedAt ?? '-'}`}
           </Typography>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={autoRefresh && !allDone ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-            onClick={() => setAutoRefresh((v) => !v)}
-            disabled={allDone}
-            sx={{ ml: 1 }}
-          >
-            {autoRefresh && !allDone ? '자동갱신 중' : allDone ? '완료' : '자동갱신 시작'}
-          </Button>
         </Stack>
       </Stack>
 
@@ -115,7 +97,7 @@ export function ConfirmedRoutePage() {
                 LIVE
               </Box>
             </Stack>
-            <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={advanceLiveProgress}>
+            <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={() => void useDispatchStore.persist.rehydrate()}>
               새로고침
             </Button>
           </Stack>

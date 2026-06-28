@@ -2,26 +2,32 @@ import { useEffect, useRef } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNaverMapsScript } from '../../hooks/useNaverMapsScript';
 import { useFarmStore } from '../../store/useFarmStore';
+import { useDispatchStore } from '../../store/useDispatchStore';
 import { RISK_LEVEL_COLOR } from '../../constants/risk';
 import type { Farm } from '../../types/farm';
 import { MapLegend } from './MapLegend';
 import { MapControls } from './MapControls';
 import { createTooltipContent } from '../../utils/mapTooltip';
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
 
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
-const DEFAULT_CENTER = { lat: 37.55, lng: 127.05 };
-const DEFAULT_ZOOM = 10;
 
-function createMarkerIcon(farm: Farm, isSelected: boolean) {
+function createMarkerIcon(farm: Farm, isFocused: boolean, isSelectedForDispatch: boolean) {
   const color = RISK_LEVEL_COLOR[farm.riskLevel];
-  const size = isSelected ? 26 : 16;
-  const circle = isSelected
-    ? `<circle cx="13" cy="13" r="10" fill="${color}" stroke="#ffffff" stroke-width="3"/>`
-    : `<circle cx="8" cy="8" r="6.5" fill="${color}" stroke="#ffffff" stroke-width="2"/>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${circle}</svg>`;
+  const size = isFocused ? 30 : isSelectedForDispatch ? 24 : 16;
+  const center = size / 2;
+  const radius = isFocused ? 10 : isSelectedForDispatch ? 8 : 6.5;
+  const selectionRing = isSelectedForDispatch
+    ? `<circle cx="${center}" cy="${center}" r="${radius + 3}" fill="none" stroke="#0B63E5" stroke-width="3"/>`
+    : '';
+  const circle = `<circle cx="${center}" cy="${center}" r="${radius}" fill="${color}" stroke="#ffffff" stroke-width="${isFocused ? 3 : 2}"/>`;
+  const check = isSelectedForDispatch
+    ? `<path d="M${center - 4.5} ${center + 0.2}l3 3 6 -7" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    : '';
+  const content = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${selectionRing}${circle}${check}</svg>`;
 
   return {
-    content: svg,
+    content,
     size: new window.naver.maps.Size(size, size),
     anchor: new window.naver.maps.Point(size / 2, size / 2),
   };
@@ -40,13 +46,15 @@ export function NaverMap() {
   const farms = useFarmStore((s) => s.farms);
   const selectedFarmId = useFarmStore((s) => s.selectedFarmId);
   const selectFarm = useFarmStore((s) => s.selectFarm);
+  const selectedFarmIds = useDispatchStore((s) => s.selectedFarmIds);
+  const toggleFarm = useDispatchStore((s) => s.toggleFarm);
 
   useEffect(() => {
     if (!loaded || !mapElRef.current || mapRef.current) return;
     const { naver } = window;
     mapRef.current = new naver.maps.Map(mapElRef.current, {
-      center: new naver.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
-      zoom: DEFAULT_ZOOM,
+      center: new naver.maps.LatLng(DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng),
+      zoom: DEFAULT_MAP_ZOOM,
       zoomControl: false,
     });
     tooltipRef.current = new naver.maps.InfoWindow({
@@ -67,15 +75,19 @@ export function NaverMap() {
     markersRef.current.clear();
 
     farms.forEach((farm) => {
-      const isSelected = farm.id === selectedFarmId;
+      const isFocused = farm.id === selectedFarmId;
+      const isSelectedForDispatch = selectedFarmIds.includes(farm.id);
       const marker = new naver.maps.Marker({
         position: new naver.maps.LatLng(farm.lat, farm.lng),
         map,
-        icon: createMarkerIcon(farm, isSelected),
+        icon: createMarkerIcon(farm, isFocused, isSelectedForDispatch),
         title: farm.name,
-        zIndex: isSelected ? 200 : 100,
+        zIndex: isFocused ? 220 : isSelectedForDispatch ? 180 : 100,
       });
-      naver.maps.Event.addListener(marker, 'click', () => selectFarm(farm.id));
+      naver.maps.Event.addListener(marker, 'click', () => {
+        selectFarm(farm.id);
+        toggleFarm(farm.id);
+      });
       naver.maps.Event.addListener(marker, 'mouseover', () => {
         const tooltip = tooltipRef.current;
         if (!tooltip) return;
@@ -87,7 +99,7 @@ export function NaverMap() {
       });
       markersRef.current.set(farm.id, marker);
     });
-  }, [loaded, farms, selectedFarmId, selectFarm]);
+  }, [loaded, farms, selectedFarmId, selectedFarmIds, selectFarm, toggleFarm]);
 
   const handleZoomIn = () => {
     const map = mapRef.current;
@@ -104,7 +116,7 @@ export function NaverMap() {
   const handleLocate = () => {
     const map = mapRef.current;
     if (!map || !window.naver) return;
-    map.panTo(new window.naver.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng));
+    map.panTo(new window.naver.maps.LatLng(DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng));
   };
 
   if (!NAVER_CLIENT_ID) {

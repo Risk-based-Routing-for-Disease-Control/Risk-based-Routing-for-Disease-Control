@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import type { Farm } from '../types/farm';
 import { mockFarms } from '../data/mockFarms';
+import { normalizeFarmDuration } from '../utils/farmDuration';
+
+const farms = mockFarms.map(normalizeFarmDuration);
 
 interface FarmStore {
   farms: Farm[];
@@ -10,8 +13,8 @@ interface FarmStore {
 }
 
 export const useFarmStore = create<FarmStore>((set) => ({
-  farms: mockFarms,
-  selectedFarmId: mockFarms[0]?.id ?? null,
+  farms,
+  selectedFarmId: farms[0]?.id ?? null,
   selectFarm: (id) => set({ selectedFarmId: id }),
   clearSelection: () => set({ selectedFarmId: null }),
 }));

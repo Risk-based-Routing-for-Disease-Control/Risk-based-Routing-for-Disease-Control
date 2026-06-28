@@ -1,16 +1,16 @@
 import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
-import { NavLink } from 'react-router-dom';
-import MapIcon from '@mui/icons-material/Map';
-import AltRouteIcon from '@mui/icons-material/AltRoute';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import { Link, useLocation } from 'react-router-dom';
+import MapIcon from '@mui/icons-material/MapOutlined';
+import LocalShippingIcon from '@mui/icons-material/LocalShippingOutlined';
 
 const NAV_ITEMS = [
-  { to: '/map', label: '지도', icon: MapIcon },
-  { to: '/dispatch', label: '경로 배치', icon: AltRouteIcon },
-  { to: '/confirmed', label: '확정 경로', icon: AssignmentTurnedInIcon },
+  { to: '/map', label: '방역 계획', icon: MapIcon, activePaths: ['/map', '/dispatch'] },
+  { to: '/confirmed', label: '방역 진행 현황', icon: LocalShippingIcon, activePaths: ['/confirmed'] },
 ] as const;
 
 export function AppSidebar() {
+  const location = useLocation();
+
   return (
     <Box
       sx={{
@@ -24,14 +24,16 @@ export function AppSidebar() {
       <List sx={{ py: 0 }}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
+          const selected = item.activePaths.some((path) => location.pathname.startsWith(path));
           return (
             <ListItemButton
               key={item.to}
-              component={NavLink}
+              component={Link}
               to={item.to}
+              selected={selected}
               sx={{
                 py: 1.5,
-                '&.active': {
+                '&.Mui-selected': {
                   bgcolor: 'primary.main',
                   color: '#fff',
                   '&:hover': { bgcolor: 'primary.dark' },

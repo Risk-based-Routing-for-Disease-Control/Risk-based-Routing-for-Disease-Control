@@ -25,12 +25,21 @@ import { useFarmStore } from '../../store/useFarmStore';
 import { useDispatchStore } from '../../store/useDispatchStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL, RISK_LEVELS } from '../../constants/risk';
 import type { RiskLevel } from '../../types/farm';
+import { LivestockIcon } from '../common/LivestockIcon';
 
-export function DispatchSettingsView() {
+interface DispatchSettingsViewProps {
+  variant?: 'page' | 'panel';
+  onDispatchComplete?: () => void;
+}
+
+export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: DispatchSettingsViewProps) {
   const farms = useFarmStore((s) => s.farms);
+  const selectFarm = useFarmStore((s) => s.selectFarm);
 
   const teamCount = useDispatchStore((s) => s.teamCount);
   const selectedFarmIds = useDispatchStore((s) => s.selectedFarmIds);
+  const isDispatching = useDispatchStore((s) => s.isDispatching);
+  const dispatchError = useDispatchStore((s) => s.dispatchError);
   const riskFilter = useDispatchStore((s) => s.riskFilter);
   const typeFilter = useDispatchStore((s) => s.typeFilter);
   const setTeamCount = useDispatchStore((s) => s.setTeamCount);
@@ -70,21 +79,28 @@ export function DispatchSettingsView() {
     }
   };
 
-  const canDispatch = teamCount >= 1 && selectedFarmIds.length >= 1;
+  const canDispatch = teamCount >= 1 && selectedFarmIds.length >= 1 && !isDispatching;
 
-  const handleDispatch = () => {
+  const handleDispatch = async () => {
     if (!canDispatch) return;
-    runDispatch(farms);
+    await runDispatch(farms);
+    if (useDispatchStore.getState().result) {
+      onDispatchComplete?.();
+    }
   };
+
+  const isPanel = variant === 'panel';
 
   return (
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-          경로 배치 설정
-        </Typography>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: isPanel ? 2 : 3 }}>
+        {!isPanel && (
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
+            경로 배치 설정
+          </Typography>
+        )}
 
-        <Paper variant="outlined" sx={{ borderRadius: 1.5, p: 2.5, mb: 3 }}>
+        <Paper variant="outlined" sx={{ borderRadius: 1.5, p: isPanel ? 2 : 2.5, mb: isPanel ? 2 : 3 }}>
           <Typography sx={{ fontWeight: 700, mb: 1.5 }}>오늘 가용 팀 수</Typography>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
             <IconButton
@@ -112,7 +128,7 @@ export function DispatchSettingsView() {
           </Typography>
         </Paper>
 
-        <Paper variant="outlined" sx={{ borderRadius: 1.5, p: 2.5 }}>
+        <Paper variant="outlined" sx={{ borderRadius: 1.5, p: isPanel ? 2 : 2.5 }}>
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Typography sx={{ fontWeight: 700 }}>농장 선택</Typography>
             <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={resetSelection}>
@@ -120,7 +136,7 @@ export function DispatchSettingsView() {
             </Button>
           </Stack>
 
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <Stack direction={isPanel ? 'column' : 'row'} spacing={isPanel ? 1 : 2} sx={{ mb: 2 }}>
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <Select
                 value={riskFilter}
@@ -157,50 +173,64 @@ export function DispatchSettingsView() {
             <Typography variant="body2">전체 선택</Typography>
           </Stack>
 
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox" />
-                <TableCell>농장명</TableCell>
-                <TableCell onClick={() => setSortDesc((value) => !value)} sx={{ cursor: 'pointer' }}>
-                  <Stack direction="row" sx={{ alignItems: 'center' }}>
-                    위험도 등급
-                    <ArrowDropDownIcon
-                      fontSize="small"
-                      sx={{ transform: sortDesc ? 'none' : 'rotate(180deg)' }}
-                    />
-                  </Stack>
-                </TableCell>
-                <TableCell>축종</TableCell>
-                <TableCell align="right">사육 두수</TableCell>
-                <TableCell align="right">예상 소요시간</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredFarms.map((farm) => (
-                <TableRow key={farm.id} hover>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      size="small"
-                      checked={selectedFarmIds.includes(farm.id)}
-                      onChange={() => toggleFarm(farm.id)}
-                    />
+          <Box sx={{ overflowX: 'auto' }}>
+            <Table size="small" sx={{ minWidth: isPanel ? 520 : undefined }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox" />
+                  <TableCell>농장명</TableCell>
+                  <TableCell onClick={() => setSortDesc((value) => !value)} sx={{ cursor: 'pointer' }}>
+                    <Stack direction="row" sx={{ alignItems: 'center' }}>
+                      위험도 등급
+                      <ArrowDropDownIcon
+                        fontSize="small"
+                        sx={{ transform: sortDesc ? 'none' : 'rotate(180deg)' }}
+                      />
+                    </Stack>
                   </TableCell>
-                  <TableCell>{farm.name}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={RISK_LEVEL_LABEL[farm.riskLevel]}
-                      sx={{ bgcolor: RISK_LEVEL_COLOR[farm.riskLevel], color: '#fff', fontWeight: 700 }}
-                    />
-                  </TableCell>
-                  <TableCell>{farm.livestockType}</TableCell>
-                  <TableCell align="right">{`${farm.livestockCount.toLocaleString()} ${farm.livestockUnit}`}</TableCell>
-                  <TableCell align="right">{`${farm.estimatedDurationMinutes}분`}</TableCell>
+                  <TableCell>축종</TableCell>
+                  <TableCell align="right">사육 두수</TableCell>
+                  <TableCell align="right">예상 소요시간</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {filteredFarms.map((farm) => (
+                  <TableRow
+                    key={farm.id}
+                    hover
+                    selected={selectedFarmIds.includes(farm.id)}
+                    onClick={() => selectFarm(farm.id)}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        size="small"
+                        checked={selectedFarmIds.includes(farm.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => toggleFarm(farm.id)}
+                      />
+                    </TableCell>
+                    <TableCell>{farm.name}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={RISK_LEVEL_LABEL[farm.riskLevel]}
+                        sx={{ bgcolor: RISK_LEVEL_COLOR[farm.riskLevel], color: '#fff', fontWeight: 700 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                        <LivestockIcon livestockType={farm.livestockType} size={22} />
+                        <Typography variant="body2">{farm.livestockType}</Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell align="right">{`${farm.livestockCount.toLocaleString()} ${farm.livestockUnit}`}</TableCell>
+                    <TableCell align="right">{`${farm.estimatedDurationMinutes}분`}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
         </Paper>
       </Box>
 
@@ -216,8 +246,13 @@ export function DispatchSettingsView() {
           onClick={handleDispatch}
           sx={{ maxWidth: 480 }}
         >
-          배치하기
+          {isDispatching ? '배치 중...' : '배치하기'}
         </Button>
+        {dispatchError && (
+          <Typography variant="caption" color="error">
+            {dispatchError}
+          </Typography>
+        )}
         {!canDispatch && (
           <Typography variant="caption" color="text.secondary">
             팀 수를 입력하고 최소 1개 이상의 농장을 선택해주세요.

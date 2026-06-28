@@ -24,7 +24,7 @@ async def get_directions(
     naver_waypoints = None
     if waypoints:
         try:
-            naver_waypoints = ":".join(
+            naver_waypoints = "|".join(
                 f"{float(lng):.6f},{float(lat):.6f}"
                 for lat, lng in (chunk.split(",") for chunk in waypoints.split(";") if chunk)
             )
