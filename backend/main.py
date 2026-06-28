@@ -41,10 +41,23 @@ DIST_DIR = os.path.join(os.path.dirname(__file__), "..", "dist")
 
 if os.path.isdir(DIST_DIR):
     app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
+    app.mount(
+        "/livestock-icons",
+        StaticFiles(directory=os.path.join(DIST_DIR, "livestock-icons")),
+        name="livestock-icons",
+    )
 
     @app.get("/favicon.svg")
     def favicon():
         return FileResponse(os.path.join(DIST_DIR, "favicon.svg"))
+
+    @app.get("/manifest.webmanifest")
+    def manifest():
+        return FileResponse(os.path.join(DIST_DIR, "manifest.webmanifest"))
+
+    @app.get("/icons.svg")
+    def icons():
+        return FileResponse(os.path.join(DIST_DIR, "icons.svg"))
 
     @app.get("/{full_path:path}")
     def serve_spa(full_path: str):
