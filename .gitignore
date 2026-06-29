@@ -1,3 +1,14 @@
+# EGIS 토지피복지도 원본 (도엽 단위 SHP, 용량이 커서 제외)
+EGIS/raw/*
+!EGIS/raw/.gitkeep
+
+# EGIS 중간 산출물 (대용량 gpkg/parquet, 용량이 커서 제외)
+EGIS/*.gpkg
+EGIS/*.parquet
+
+# Azurite local storage emulator state
+__azurite_db_*__.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
