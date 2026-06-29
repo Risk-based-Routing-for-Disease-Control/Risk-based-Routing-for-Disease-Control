@@ -48,12 +48,12 @@ def db_health_check():
 DIST_DIR = os.path.join(os.path.dirname(__file__), "..", "dist")
 
 if os.path.isdir(DIST_DIR):
-    app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
-    app.mount(
-        "/livestock-icons",
-        StaticFiles(directory=os.path.join(DIST_DIR, "livestock-icons")),
-        name="livestock-icons",
-    )
+    _assets_dir = os.path.join(DIST_DIR, "assets")
+    _icons_dir = os.path.join(DIST_DIR, "livestock-icons")
+    if os.path.isdir(_assets_dir):
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+    if os.path.isdir(_icons_dir):
+        app.mount("/livestock-icons", StaticFiles(directory=_icons_dir), name="livestock-icons")
 
     @app.get("/favicon.svg")
     def favicon():
