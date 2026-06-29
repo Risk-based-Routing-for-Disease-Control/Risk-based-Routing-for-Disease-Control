@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Farm, RiskLevel } from '../types/farm';
 import type { DispatchResult, DispatchTeam } from '../types/dispatch';
-import { solveDispatch } from '../api/dispatch';
+import { routeAssignment } from '../api/dispatch';
 import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
@@ -30,6 +30,7 @@ interface DispatchState {
   riskFilter: RiskLevel | 'all';
   typeFilter: string;
   result: DispatchResult | null;
+  dispatchRunId: string | null;
   isDispatching: boolean;
   dispatchError: string | null;
   liveTeams: DispatchTeam[] | null;
@@ -58,6 +59,7 @@ export const useDispatchStore = create<DispatchState>()(
       riskFilter: 'all',
       typeFilter: 'all',
       result: null,
+      dispatchRunId: null,
       isDispatching: false,
       dispatchError: null,
       liveTeams: null,
@@ -84,8 +86,12 @@ export const useDispatchStore = create<DispatchState>()(
         const { selectedFarmIds, teamCount } = get();
         set({ isDispatching: true, dispatchError: null });
         try {
-          const result = await solveDispatch({ farms, selectedFarmIds, teamCount });
-          set({ result, isDispatching: false });
+          const { result, dispatchRunId } = await routeAssignment({
+            teamCount,
+            farmIds: selectedFarmIds,
+            farms,
+          });
+          set({ result, dispatchRunId, isDispatching: false });
         } catch (error) {
           set({
             isDispatching: false,
@@ -94,7 +100,7 @@ export const useDispatchStore = create<DispatchState>()(
         }
       },
 
-      resetResult: () => set({ result: null, dispatchError: null }),
+      resetResult: () => set({ result: null, dispatchRunId: null, dispatchError: null }),
 
       confirmDispatch: () => {
         const { result } = get();

@@ -8,8 +8,15 @@ import { DispatchPage } from './pages/DispatchPage';
 import { ConfirmedRoutePage } from './pages/ConfirmedRoutePage';
 import { MobileFieldPage } from './pages/MobileFieldPage';
 import { useDispatchStore } from './store/useDispatchStore';
+import { useFarmStore } from './store/useFarmStore';
 
 function App() {
+  const loadFarms = useFarmStore((s) => s.loadFarms);
+
+  useEffect(() => {
+    void loadFarms();
+  }, [loadFarms]);
+
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (event.key === 'livestock-dispatch') {

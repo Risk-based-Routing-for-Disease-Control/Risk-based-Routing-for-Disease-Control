@@ -54,6 +54,7 @@ async def solve_dispatch_route(request: DispatchSolveRequest):
 class RouteAssignmentRequest(BaseModel):
     teamCount: int = Field(..., ge=1)
     farmIds: list[str]
+    farms: list[dict[str, Any]] | None = None  # DB 전환 전 프론트 farm 객체 직접 수신용
     depotName: str = "공통 방역 출발지"
     depotLat: float = 37.1995
     depotLng: float = 126.8310
@@ -117,9 +118,9 @@ def _build_stops_response(
 @router.post("/route-assignment")
 async def route_assignment(request: RouteAssignmentRequest):
     """배차 최적화 실행 후 결과를 DB에 저장하고 dispatchRunId를 반환한다."""
-    all_farms = get_farms_from_db()
+    source_farms = request.farms if request.farms else get_farms_from_db()
     id_set = set(request.farmIds)
-    selected = [farm_from_dict(f) for f in all_farms if str(f.get("id")) in id_set]
+    selected = [farm_from_dict(f) for f in source_farms if str(f.get("id")) in id_set]
     if not selected:
         raise HTTPException(status_code=400, detail="유효한 농장 ID가 없습니다.")
 

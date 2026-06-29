@@ -47,13 +47,34 @@ _DUMMY_FARMS: list[dict[str, Any]] = [
 def get_farms_from_db() -> list[dict[str, Any]]:
     """농장 목록을 조회한다.
 
-    TODO: 여기를 실제 Databricks 쿼리로 교체
-        conn = get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT id, name, lat, lng, risk_level, risk_score FROM farms"
-            )
-            rows = cursor.fetchall()
-        return [dict(zip([c[0] for c in cursor.description], row)) for row in rows]
+    PostgreSQL farms 테이블에 데이터가 있으면 DB값을 반환하고,
+    비어있거나 오류 시 더미 데이터를 fallback으로 반환한다.
     """
+    try:
+        from services.db import get_cursor
+        with get_cursor() as cur:
+            cur.execute("""
+                SELECT
+                    f.farm_id        AS id,
+                    f.farm_code      AS "farmCode",
+                    f.name,
+                    f.lat,
+                    f.lng,
+                    frs.risk_score   AS "riskScore",
+                    frs.risk_level   AS "riskLevel",
+                    frs.risk_date    AS "riskDate"
+                FROM farms f
+                LEFT JOIN LATERAL (
+                    SELECT risk_score, risk_level, risk_date
+                    FROM farm_risk_scores
+                    WHERE farm_id = f.farm_id
+                    ORDER BY risk_date DESC
+                    LIMIT 1
+                ) frs ON true
+            """)
+            rows = cur.fetchall()
+        if rows:
+            return [dict(row) for row in rows]
+    except Exception:
+        pass
     return _DUMMY_FARMS
