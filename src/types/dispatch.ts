@@ -7,6 +7,9 @@ export interface DispatchDisinfectionHub {
   name: string;
   lat: number;
   lng: number;
+  address?: string;
+  phone?: string;
+  operatingHours?: string;
 }
 
 export interface DispatchStop {

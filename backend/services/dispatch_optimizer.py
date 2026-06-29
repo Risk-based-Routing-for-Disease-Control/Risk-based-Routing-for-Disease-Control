@@ -1,28 +1,21 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 from dataclasses import dataclass
+import io
 import math
+import random
 from typing import Any, Literal
 
-from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-
-from services.dispatch_constraints import (
-    add_time_limit_dimension,
-    allow_unassigned_farms,
-    constrain_one_cluster_per_team,
-    farm_arc_minutes_with_required_disinfection,
-    minimize_total_and_longest_team_time,
-)
-from services.disinfection_facilities import DisinfectionFacility, nearest_disinfection_facility
+from services.disinfection_facilities import DisinfectionFacility, load_hwaseong_disinfection_facilities
+from services.experiments.clustering.risk_clustering_v3 import risk_clustering_v3
 from services.osrm_client import OsrmPoint, build_osrm_duration_matrix
 
 
-# NOTE: The clustering, OR-Tools objective, and constraints in this module are
-# temporary prototype logic for web integration/testing. Replace or recalibrate
-# before production operations.
+# NOTE: The optimizer uses risk_clustering_v3 for team buckets, then ALNS per
+# team to maximize covered risk within the route-time limit.
 
 RiskLevel = Literal["warning", "high", "critical"]
-NodeType = Literal["depot", "farm", "disinfection"]
 
 TEAM_COLORS = ["#1565C0", "#8E24AA", "#00897B", "#EF6C00", "#5E35B1", "#2E7D32"]
 DEFAULT_DEPOT_NAME = "공통 방역 출발지"
@@ -30,6 +23,8 @@ DEFAULT_DEPOT_LAT = 37.1995
 DEFAULT_DEPOT_LNG = 126.8310
 DEFAULT_FARM_SERVICE_MINUTES = 15
 FARM_SERVICE_MINUTES_PER_LIVESTOCK = 0.0007
+RANDOM_SEED = 42
+DEPOT_ID = "depot"
 
 
 def calculate_farm_service_minutes(livestock_count: int | float | None) -> int:
@@ -53,18 +48,6 @@ class DispatchFarm:
     address: str = ""
     xai_factors: list[dict[str, Any]] | None = None
     last_updated_at: str = ""
-
-
-@dataclass(frozen=True)
-class DispatchNode:
-    node_id: int
-    node_type: NodeType
-    lat: float
-    lng: float
-    service_minutes: int
-    name: str
-    farm: DispatchFarm | None = None
-    cluster_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -119,108 +102,316 @@ def farm_to_response(farm: DispatchFarm) -> dict[str, Any]:
     }
 
 
-def _distance2(farm: DispatchFarm, center: tuple[float, float]) -> float:
-    return (farm.lat - center[0]) ** 2 + (farm.lng - center[1]) ** 2
+@dataclass(frozen=True)
+class AlnsContext:
+    max_time: int
+    disinfect_service_minutes: int
+    time_matrix: dict[str, dict[str, int]]
+    farm_map: dict[str, DispatchFarm]
+    disinfection_map: dict[str, DisinfectionFacility]
 
 
-def _cluster_farms(farms: list[DispatchFarm], team_count: int) -> dict[str, int]:
-    cluster_count = min(team_count, len(farms))
-    ordered = sorted(farms, key=lambda farm: farm.risk_score, reverse=True)
-    centers = [(farm.lat, farm.lng) for farm in ordered[:cluster_count]]
-    assignments: dict[str, int] = {}
-
-    for _ in range(12):
-        buckets: list[list[DispatchFarm]] = [[] for _ in range(cluster_count)]
-        for farm in farms:
-            cluster_id = min(range(cluster_count), key=lambda index: _distance2(farm, centers[index]))
-            buckets[cluster_id].append(farm)
-            assignments[farm.id] = cluster_id
-
-        next_centers: list[tuple[float, float]] = []
-        for index, bucket in enumerate(buckets):
-            if not bucket:
-                next_centers.append(centers[index])
-                continue
-            weight_sum = sum(1.0 + farm.risk_score for farm in bucket)
-            next_centers.append(
-                (
-                    sum(farm.lat * (1.0 + farm.risk_score) for farm in bucket) / weight_sum,
-                    sum(farm.lng * (1.0 + farm.risk_score) for farm in bucket) / weight_sum,
-                )
-            )
-        if next_centers == centers:
-            break
-        centers = next_centers
-
-    return assignments
+def _service_minutes(farm: DispatchFarm, options: DispatchOptions) -> int:
+    return farm.estimated_duration_minutes or options.farm_service_minutes
 
 
-def _build_nearest_disinfection_hubs(
-    farms: list[DispatchFarm],
-) -> dict[str, DisinfectionFacility]:
-    return {farm.id: nearest_disinfection_facility(farm.lat, farm.lng) for farm in farms}
+def _travel_time(ctx: AlnsContext, from_id: str, to_id: str) -> int:
+    return ctx.time_matrix[from_id][to_id]
 
 
-async def _build_nodes(
-    farms: list[DispatchFarm],
+def _best_disinfection_for_leg(
+    current_farm_id: str,
+    next_node_id: str,
+    ctx: AlnsContext,
+) -> DisinfectionFacility:
+    return min(
+        ctx.disinfection_map.values(),
+        key=lambda facility: (
+            _travel_time(ctx, current_farm_id, facility.id)
+            + _travel_time(ctx, facility.id, next_node_id)
+        ),
+    )
+
+
+def _leg_minutes(
+    ctx: AlnsContext,
     options: DispatchOptions,
-) -> tuple[list[DispatchNode], dict[int, DisinfectionFacility]]:
-    cluster_by_farm_id = _cluster_farms(farms, options.team_count)
-    hubs = _build_nearest_disinfection_hubs(farms)
-    nodes = [
-        DispatchNode(
-            node_id=0,
-            node_type="depot",
-            lat=options.depot_lat,
-            lng=options.depot_lng,
-            service_minutes=0,
-            name=options.depot_name,
-        )
-    ]
-    hub_by_farm_node_id: dict[int, DisinfectionFacility] = {}
-
-    for farm in sorted(farms, key=lambda item: item.risk_score, reverse=True):
-        cluster_id = cluster_by_farm_id[farm.id]
-        farm_node_id = len(nodes)
-        farm_service = farm.estimated_duration_minutes or options.farm_service_minutes
-        nodes.append(
-            DispatchNode(
-                node_id=farm_node_id,
-                node_type="farm",
-                lat=farm.lat,
-                lng=farm.lng,
-                service_minutes=farm_service,
-                name=farm.name,
-                farm=farm,
-                cluster_id=cluster_id,
-            )
-        )
-
-        hub_by_farm_node_id[farm_node_id] = hubs[farm.id]
-
-    return nodes, hub_by_farm_node_id
-
-
-def _arc_minutes(
-    nodes: list[DispatchNode],
-    matrix: list[list[int]],
-    hub_matrix_index_by_farm_node_id: dict[int, int],
-    options: DispatchOptions,
-    from_node_id: int,
-    to_node_id: int,
+    from_id: str,
+    to_id: str,
 ) -> int:
-    from_node = nodes[from_node_id]
-    if from_node.node_type == "farm":
-        hub_index = hub_matrix_index_by_farm_node_id[from_node_id]
-        return farm_arc_minutes_with_required_disinfection(
-            matrix,
-            from_node_id,
-            hub_index,
-            to_node_id,
-            from_node.service_minutes,
-            options.disinfect_service_minutes,
+    if from_id not in ctx.farm_map:
+        return _travel_time(ctx, from_id, to_id)
+
+    hub = _best_disinfection_for_leg(from_id, to_id, ctx)
+    return (
+        _service_minutes(ctx.farm_map[from_id], options)
+        + _travel_time(ctx, from_id, hub.id)
+        + ctx.disinfect_service_minutes
+        + _travel_time(ctx, hub.id, to_id)
+    )
+
+
+def route_minutes(route: list[str], ctx: AlnsContext, options: DispatchOptions) -> int:
+    return sum(_leg_minutes(ctx, options, route[index], route[index + 1]) for index in range(len(route) - 1))
+
+
+def route_risk(route: list[str], ctx: AlnsContext) -> float:
+    return round(sum(ctx.farm_map[node_id].risk_score for node_id in route if node_id in ctx.farm_map), 3)
+
+
+def _insertion_delta(route: list[str], candidate: str, pos: int, ctx: AlnsContext, options: DispatchOptions) -> int:
+    before = route_minutes(route, ctx, options)
+    trial = route[:pos] + [candidate] + route[pos:]
+    return route_minutes(trial, ctx, options) - before
+
+
+def _best_feasible_insert(
+    route: list[str],
+    candidate: str,
+    ctx: AlnsContext,
+    options: DispatchOptions,
+) -> tuple[int | None, int]:
+    best_pos: int | None = None
+    best_delta = math.inf
+    for pos in range(1, len(route)):
+        delta = _insertion_delta(route, candidate, pos, ctx, options)
+        trial = route[:pos] + [candidate] + route[pos:]
+        if delta < best_delta and route_minutes(trial, ctx, options) <= ctx.max_time:
+            best_delta = delta
+            best_pos = pos
+    return best_pos, int(best_delta) if best_pos is not None else 0
+
+
+def greedy_route(farm_ids: list[str], ctx: AlnsContext, options: DispatchOptions) -> list[str]:
+    unvisited = list(farm_ids)
+    route = [DEPOT_ID, DEPOT_ID]
+    while unvisited:
+        best_farm: str | None = None
+        best_score = -1.0
+        best_pos: int | None = None
+        for farm_id in unvisited:
+            pos, delta = _best_feasible_insert(route, farm_id, ctx, options)
+            if pos is None:
+                continue
+            score = ctx.farm_map[farm_id].risk_score / max(delta, 1)
+            if score > best_score:
+                best_farm = farm_id
+                best_score = score
+                best_pos = pos
+        if best_farm is None or best_pos is None:
+            break
+        route = route[:best_pos] + [best_farm] + route[best_pos:]
+        unvisited.remove(best_farm)
+    return route
+
+
+def _destroy_by_risk(route: list[str], n: int, ctx: AlnsContext) -> tuple[list[str], list[str]]:
+    farms = [node_id for node_id in route if node_id in ctx.farm_map]
+    by_risk = sorted(farms, key=lambda node_id: ctx.farm_map[node_id].risk_score)
+    pool = by_risk[: max(1, len(by_risk) // 2)]
+    removed = random.sample(pool, min(n, len(pool)))
+    return [node_id for node_id in route if node_id not in removed], removed
+
+
+def _destroy_by_cost(
+    route: list[str],
+    n: int,
+    ctx: AlnsContext,
+    options: DispatchOptions,
+) -> tuple[list[str], list[str]]:
+    farms = [node_id for node_id in route if node_id in ctx.farm_map]
+    if len(farms) < 2:
+        return _destroy_by_risk(route, n, ctx)
+
+    efficiencies: list[tuple[str, float]] = []
+    current_minutes = route_minutes(route, ctx, options)
+    for farm_id in farms:
+        trial = [node_id for node_id in route if node_id != farm_id]
+        saved = current_minutes - route_minutes(trial, ctx, options)
+        efficiency = ctx.farm_map[farm_id].risk_score / max(saved, 1)
+        efficiencies.append((farm_id, efficiency))
+
+    efficiencies.sort(key=lambda item: item[1])
+    pool = [farm_id for farm_id, _ in efficiencies[: max(1, len(efficiencies) // 2)]]
+    removed = random.sample(pool, min(n, len(pool)))
+    return [node_id for node_id in route if node_id not in removed], removed
+
+
+def _destroy_random(route: list[str], n: int, ctx: AlnsContext) -> tuple[list[str], list[str]]:
+    farms = [node_id for node_id in route if node_id in ctx.farm_map]
+    removed = random.sample(farms, min(n, len(farms)))
+    return [node_id for node_id in route if node_id not in removed], removed
+
+
+def _insert_candidates(
+    route: list[str],
+    candidates: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+) -> list[str]:
+    current = route[:]
+    for candidate in candidates:
+        pos, _ = _best_feasible_insert(current, candidate, ctx, options)
+        if pos is not None:
+            current = current[:pos] + [candidate] + current[pos:]
+    return current
+
+
+def _repair_by_efficiency(
+    route: list[str],
+    candidates: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+) -> list[str]:
+    ordered = sorted(
+        candidates,
+        key=lambda farm_id: ctx.farm_map[farm_id].risk_score
+        / max(_service_minutes(ctx.farm_map[farm_id], options), 1),
+        reverse=True,
+    )
+    return _insert_candidates(route, ordered, ctx, options)
+
+
+def _repair_by_risk(
+    route: list[str],
+    candidates: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+) -> list[str]:
+    ordered = sorted(candidates, key=lambda farm_id: ctx.farm_map[farm_id].risk_score, reverse=True)
+    return _insert_candidates(route, ordered, ctx, options)
+
+
+def _roulette(weights: list[float]) -> int:
+    total = sum(weights)
+    threshold = random.uniform(0, total)
+    cumulative = 0.0
+    for index, weight in enumerate(weights):
+        cumulative += weight
+        if threshold <= cumulative:
+            return index
+    return len(weights) - 1
+
+
+def alns_improve(
+    route: list[str],
+    all_farm_ids: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+    max_iter: int = 500,
+    destroy_count: int = 2,
+) -> list[str]:
+    destroy_weights = [1.0, 1.0, 1.0]
+    repair_weights = [1.0, 1.0]
+    destroy_counts = [0, 0, 0]
+    repair_counts = [0, 0]
+    best_route = route[:]
+    best_risk = route_risk(best_route, ctx)
+    no_improvement = 0
+
+    for _ in range(max_iter):
+        if no_improvement >= 50:
+            break
+        farms_in = [node_id for node_id in best_route if node_id in ctx.farm_map]
+        if not farms_in:
+            break
+
+        destroy_index = _roulette(destroy_weights)
+        repair_index = _roulette(repair_weights)
+        actual_destroy = min(destroy_count, len(farms_in))
+
+        if destroy_index == 0:
+            destroyed_route, _ = _destroy_by_risk(best_route, actual_destroy, ctx)
+        elif destroy_index == 1:
+            destroyed_route, _ = _destroy_by_cost(best_route, actual_destroy, ctx, options)
+        else:
+            destroyed_route, _ = _destroy_random(best_route, actual_destroy, ctx)
+
+        visited = {node_id for node_id in destroyed_route if node_id in ctx.farm_map}
+        candidates = [farm_id for farm_id in all_farm_ids if farm_id not in visited]
+        repaired_route = (
+            _repair_by_efficiency(destroyed_route, candidates, ctx, options)
+            if repair_index == 0
+            else _repair_by_risk(destroyed_route, candidates, ctx, options)
         )
-    return matrix[from_node_id][to_node_id] + from_node.service_minutes
+
+        trial_risk = route_risk(repaired_route, ctx)
+        score = 0
+        if trial_risk > best_risk:
+            best_route = repaired_route[:]
+            best_risk = trial_risk
+            no_improvement = 0
+            score = 3
+        else:
+            no_improvement += 1
+
+        destroy_counts[destroy_index] += 1
+        repair_counts[repair_index] += 1
+        destroy_weights[destroy_index] = max(
+            0.01,
+            destroy_weights[destroy_index] * 0.9 + (score / max(destroy_counts[destroy_index], 1)) * 0.1,
+        )
+        repair_weights[repair_index] = max(
+            0.01,
+            repair_weights[repair_index] * 0.9 + (score / max(repair_counts[repair_index], 1)) * 0.1,
+        )
+
+    return best_route
+
+
+def _cluster_farms_for_teams(farms: list[DispatchFarm], team_count: int, options: DispatchOptions) -> list[list[DispatchFarm]]:
+    cluster_count = max(1, min(team_count, len(farms)))
+    farm_by_id = {farm.id: farm for farm in farms}
+    clustering_input = [
+        {
+            "id": farm.id,
+            "lat": farm.lat,
+            "lon": farm.lng,
+            "risk": farm.risk_score,
+            "service_min": _service_minutes(farm, options),
+        }
+        for farm in farms
+    ]
+    with redirect_stdout(io.StringIO()):
+        clusters, _ = risk_clustering_v3(clustering_input, cluster_count)
+
+    buckets: list[list[DispatchFarm]] = [[] for _ in range(cluster_count)]
+    for index in range(cluster_count):
+        buckets[index] = [farm_by_id[item["id"]] for item in clusters[index]]
+    return buckets
+
+
+async def _build_context(farms: list[DispatchFarm], options: DispatchOptions) -> AlnsContext:
+    facilities = {facility.id: facility for facility in load_hwaseong_disinfection_facilities()}
+    node_points = {DEPOT_ID: OsrmPoint(options.depot_lat, options.depot_lng)}
+    node_points.update({farm.id: OsrmPoint(farm.lat, farm.lng) for farm in farms})
+    node_points.update({facility.id: facility.point for facility in facilities.values()})
+
+    node_ids = list(node_points)
+    matrix = await build_osrm_duration_matrix(list(node_points.values()))
+    time_matrix = {
+        from_id: {to_id: matrix[from_index][to_index] for to_index, to_id in enumerate(node_ids)}
+        for from_index, from_id in enumerate(node_ids)
+    }
+    return AlnsContext(
+        max_time=options.max_route_minutes,
+        disinfect_service_minutes=options.disinfect_service_minutes,
+        time_matrix=time_matrix,
+        farm_map={farm.id: farm for farm in farms},
+        disinfection_map=facilities,
+    )
+
+
+def _hub_response(hub: DisinfectionFacility) -> dict[str, Any]:
+    return {
+        "id": hub.id,
+        "name": hub.name,
+        "lat": hub.lat,
+        "lng": hub.lng,
+        "address": hub.address,
+        "phone": hub.phone,
+        "operatingHours": hub.operating_hours,
+    }
 
 
 async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) -> dict[str, Any]:
@@ -235,99 +426,40 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
     if options.team_count < 1:
         raise ValueError("team_count must be at least 1")
 
-    nodes, hub_by_farm_node_id = await _build_nodes(farms, options)
-    hub_points = list(hub_by_farm_node_id.values())
-    matrix_points = [OsrmPoint(node.lat, node.lng) for node in nodes] + [hub.point for hub in hub_points]
-    hub_matrix_index_by_farm_node_id = {
-        farm_node_id: len(nodes) + hub_index
-        for hub_index, farm_node_id in enumerate(hub_by_farm_node_id)
-    }
-    matrix = await build_osrm_duration_matrix(matrix_points)
-    manager = pywrapcp.RoutingIndexManager(
-        len(nodes),
-        options.team_count,
-        [0] * options.team_count,
-        [0] * options.team_count,
-    )
-    routing = pywrapcp.RoutingModel(manager)
-
-    def transit_minutes(from_index: int, to_index: int) -> int:
-        return _arc_minutes(
-            nodes,
-            matrix,
-            hub_matrix_index_by_farm_node_id,
-            options,
-            manager.IndexToNode(from_index),
-            manager.IndexToNode(to_index),
-        )
-
-    transit_index = routing.RegisterTransitCallback(transit_minutes)
-    routing.SetArcCostEvaluatorOfAllVehicles(transit_index)
-    time_dimension = add_time_limit_dimension(
-        routing,
-        transit_index,
-        options.team_count,
-        options.max_route_minutes,
-    )
-
-    node_cluster_by_id = {
-        node.node_id: node.cluster_id
-        for node in nodes
-        if node.node_type == "farm" and node.cluster_id is not None
-    }
-    if options.allow_unassigned:
-        allow_unassigned_farms(
-            routing,
-            manager,
-            {
-                node.node_id: 100_000 + int((node.farm.risk_score if node.farm else 0) * 10_000)
-                for node in nodes
-                if node.node_type == "farm"
-            },
-        )
-    constrain_one_cluster_per_team(routing, manager, node_cluster_by_id)
-    minimize_total_and_longest_team_time(routing, time_dimension, options.team_count)
-
-    params = pywrapcp.DefaultRoutingSearchParameters()
-    params.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
-    params.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    params.time_limit.FromSeconds(options.search_time_limit_seconds)
-
-    solution = routing.SolveWithParameters(params)
-    if solution is None:
-        raise RuntimeError("배차 제약조건을 만족하는 경로를 찾지 못했습니다.")
-
+    random.seed(RANDOM_SEED)
+    ctx = await _build_context(farms, options)
+    team_buckets = _cluster_farms_for_teams(farms, options.team_count, options)
     teams: list[dict[str, Any]] = []
     assigned_farm_ids: set[str] = set()
-    team_durations: list[int] = []
     total_duration = 0
-    depot = nodes[0]
-    depot_response = {"name": depot.name, "lat": depot.lat, "lng": depot.lng}
-    for vehicle_id in range(options.team_count):
-        stops: list[dict[str, Any]] = []
-        index = routing.Start(vehicle_id)
-        while not routing.IsEnd(index):
-            node = nodes[manager.IndexToNode(index)]
-            if node.node_type == "farm" and node.farm is not None:
-                assigned_farm_ids.add(node.farm.id)
-                disinfection_hub = hub_by_farm_node_id[node.node_id]
-                stops.append(
-                    {
-                        "farm": farm_to_response(node.farm),
-                        "disinfectionHub": {
-                            "id": disinfection_hub.id,
-                            "name": disinfection_hub.name,
-                            "lat": disinfection_hub.lat,
-                            "lng": disinfection_hub.lng,
-                        },
-                        "order": len(stops) + 1,
-                        "status": "plain",
-                    }
-                )
-            index = solution.Value(routing.NextVar(index))
+    depot_response = {"name": options.depot_name, "lat": options.depot_lat, "lng": options.depot_lng}
 
-        duration = int(solution.Value(time_dimension.CumulVar(index)))
-        team_durations.append(duration)
+    for vehicle_id in range(options.team_count):
+        bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
+        route = [DEPOT_ID, DEPOT_ID]
+        if bucket:
+            farm_ids = [farm.id for farm in bucket]
+            route = greedy_route(farm_ids, ctx, options)
+            route = alns_improve(route, farm_ids, ctx, options)
+
+        stops: list[dict[str, Any]] = []
+        for index, farm_id in enumerate([node_id for node_id in route if node_id in ctx.farm_map]):
+            farm = ctx.farm_map[farm_id]
+            next_node_id = route[route.index(farm_id) + 1]
+            disinfection_hub = _best_disinfection_for_leg(farm_id, next_node_id, ctx)
+            assigned_farm_ids.add(farm_id)
+            stops.append(
+                {
+                    "farm": farm_to_response(farm),
+                    "disinfectionHub": _hub_response(disinfection_hub),
+                    "order": index + 1,
+                    "status": "plain",
+                }
+            )
+
+        duration = route_minutes(route, ctx, options) if bucket else 0
+        if duration > options.max_route_minutes and not options.allow_unassigned:
+            raise RuntimeError("배차 제약조건을 만족하는 경로를 찾지 못했습니다.")
         total_duration += duration
         teams.append(
             {
@@ -341,6 +473,9 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
         )
 
     unassigned = [farm_to_response(farm) for farm in farms if farm.id not in assigned_farm_ids]
+    if unassigned and not options.allow_unassigned:
+        raise RuntimeError("배차 제약조건을 만족하는 경로를 찾지 못했습니다.")
+
     return {
         "teams": teams,
         "unassignedFarms": unassigned,
