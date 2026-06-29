@@ -1,6 +1,10 @@
+import hashlib
+import json
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from services.db import get_cursor
 from services.naver_client import NaverDirectionsError, get_multi_stop_route, get_route
 
 router = APIRouter(tags=["directions"])
@@ -75,6 +79,71 @@ class MultiStopRouteResponse(BaseModel):
     totalDistance: float
     totalDuration: float
     legs: list[RouteLeg]
+
+
+@router.get("/routes")
+async def get_routes(
+    startLat: float = Query(...),
+    startLng: float = Query(...),
+    endLat: float = Query(...),
+    endLng: float = Query(...),
+):
+    """경로 조회. directions_cache 히트 시 DB에서 반환, 미스 시 Naver API 호출 후 캐시 저장."""
+    cache_key = hashlib.md5(f"{startLat},{startLng}:{endLat},{endLng}".encode()).hexdigest()
+
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            SELECT rl.distance_meters, rl.duration_millis, rl.path_json, rl.provider
+            FROM directions_cache dc
+            JOIN route_legs rl ON dc.cache_key = rl.cache_key
+            WHERE dc.cache_key = %s
+            LIMIT 1
+            """,
+            (cache_key,),
+        )
+        cached = cur.fetchone()
+
+    if cached:
+        return {
+            "distance": cached["distance_meters"],
+            "duration": cached["duration_millis"],
+            "path": cached["path_json"],
+            "provider": cached["provider"],
+            "cached": True,
+        }
+
+    start = f"{startLng},{startLat}"
+    goal = f"{endLng},{endLat}"
+    try:
+        result = await get_route(start=start, goal=goal)
+    except NaverDirectionsError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO directions_cache (cache_key, start_lat, start_lng, end_lat, end_lng, created_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+            ON CONFLICT (cache_key) DO NOTHING
+            """,
+            (cache_key, startLat, startLng, endLat, endLng),
+        )
+        cur.execute(
+            """
+            INSERT INTO route_legs (cache_key, distance_meters, duration_millis, path_json, provider)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (cache_key, result["distance"], result["duration"], json.dumps(result["path"]), "naver"),
+        )
+
+    return {
+        "distance": result["distance"],
+        "duration": result["duration"],
+        "path": result["path"],
+        "provider": "naver",
+        "cached": False,
+    }
 
 
 @router.post("/directions/multi", response_model=MultiStopRouteResponse)
