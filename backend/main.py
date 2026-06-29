@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.responses import FileResponse  # noqa: E402
 
 from routers import directions, dispatch, farms  # noqa: E402
+from services.db import get_cursor  # noqa: E402
 
 app = FastAPI(title="방역로 (BioRoute) API")
 
@@ -33,6 +34,13 @@ app.include_router(dispatch.router, prefix="/api")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "bioroute"}
+
+
+@app.get("/api/health/db")
+def db_health_check():
+    with get_cursor() as cur:
+        cur.execute("SELECT 1")
+    return {"status": "ok", "db": "postgresql"}
 
 
 # React 정적 파일 서빙 (dist/ 는 배포 시 wwwroot/dist 에 위치)
