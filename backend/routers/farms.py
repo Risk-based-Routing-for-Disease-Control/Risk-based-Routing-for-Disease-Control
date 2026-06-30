@@ -5,6 +5,14 @@ from services.databricks_client import get_farms_from_db
 router = APIRouter(tags=["farms"])
 
 _RISK_LEVEL_MAP = {"critical": "HIGH", "high": "MEDIUM", "warning": "LOW"}
+_VALID_RISK_LEVELS = {"HIGH", "MEDIUM", "LOW"}
+
+
+def _normalize_risk_level(raw: str) -> str:
+    """더미 데이터(critical/high/warning)와 DB 데이터(HIGH/MEDIUM/LOW)를 모두 처리한다."""
+    if raw in _VALID_RISK_LEVELS:
+        return raw
+    return _RISK_LEVEL_MAP.get(raw, "LOW")
 
 _FARM_DETAILS: dict[str, dict] = {
     "farm-001": {
@@ -116,6 +124,6 @@ def get_farm(farm_id: str):
         "lat": base["lat"],
         "lng": base["lng"],
         "riskScore": round(float(base["riskScore"]) * 100, 1),
-        "riskLevel": _RISK_LEVEL_MAP.get(str(base["riskLevel"]), "LOW"),
+        "riskLevel": _normalize_risk_level(str(base["riskLevel"])),
         **detail,
     }
