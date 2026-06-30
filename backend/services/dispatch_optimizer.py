@@ -21,15 +21,39 @@ TEAM_COLORS = ["#1565C0", "#8E24AA", "#00897B", "#EF6C00", "#5E35B1", "#2E7D32"]
 DEFAULT_DEPOT_NAME = "공통 방역 출발지"
 DEFAULT_DEPOT_LAT = 37.1995
 DEFAULT_DEPOT_LNG = 126.8310
-DEFAULT_FARM_SERVICE_MINUTES = 15
-FARM_SERVICE_MINUTES_PER_LIVESTOCK = 0.0007
+DEFAULT_FARM_SERVICE_MINUTES = 90
+MIN_FARM_SERVICE_MINUTES = 60
+BASE_LIVESTOCK_COUNT = 10_000
+BASE_FARM_SERVICE_MINUTES = 90
+ADDITIONAL_MINUTES_PER_10K_LIVESTOCK = 35
+SERVICE_ROUNDING_MINUTES = 10
 RANDOM_SEED = 42
 DEPOT_ID = "depot"
 
 
+def _round_up_minutes(value: float, unit: int = SERVICE_ROUNDING_MINUTES) -> int:
+    return int(math.ceil((value - 1e-9) / unit) * unit)
+
+
 def calculate_farm_service_minutes(livestock_count: int | float | None) -> int:
+    """Estimate regular surveillance time from interview-based field guidance.
+
+    The interview baseline is 1-2 hours for routine farm surveillance, about
+    90 minutes for 10,000 poultry, then 30-40 more minutes per additional
+    10,000. Unknown livestock counts use the 10,000-head baseline to avoid
+    underestimating dispatch workload.
+    """
     count = max(0.0, float(livestock_count or 0))
-    return int(math.ceil(DEFAULT_FARM_SERVICE_MINUTES + count * FARM_SERVICE_MINUTES_PER_LIVESTOCK))
+    if count <= 0:
+        return DEFAULT_FARM_SERVICE_MINUTES
+    if count <= BASE_LIVESTOCK_COUNT:
+        scaled = MIN_FARM_SERVICE_MINUTES + (count / BASE_LIVESTOCK_COUNT) * (
+            BASE_FARM_SERVICE_MINUTES - MIN_FARM_SERVICE_MINUTES
+        )
+        return _round_up_minutes(scaled)
+
+    extra_units = math.ceil((count - BASE_LIVESTOCK_COUNT) / BASE_LIVESTOCK_COUNT)
+    return BASE_FARM_SERVICE_MINUTES + int(extra_units * ADDITIONAL_MINUTES_PER_10K_LIVESTOCK)
 
 
 @dataclass(frozen=True)
