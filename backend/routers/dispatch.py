@@ -84,7 +84,7 @@ def _build_stops_response(
 
     for s in optimizer_stops:
         farm = s["farm"]
-        farm_row = (order, farm["id"], None, farm["name"], farm["estimatedDurationMinutes"])
+        farm_row = (order, farm["id"], None, farm["estimatedDurationMinutes"])
         stops_response.append(
             {
                 "stopOrder": order,
@@ -99,7 +99,7 @@ def _build_stops_response(
 
         hub = s.get("disinfectionHub")
         if hub:
-            hub_row = (order, None, hub["id"], hub["name"], disinfect_minutes)
+            hub_row = (order, None, hub["id"], disinfect_minutes)
             stops_response.append(
                 {
                     "stopOrder": order,
@@ -177,14 +177,14 @@ async def route_assignment(request: RouteAssignmentRequest):
             )
 
             stops_resp, db_rows = _build_stops_response(team["stops"], request.disinfectServiceMinutes)
-            for stop_order, farm_id, facility_id, name, duration in db_rows:
+            for stop_order, farm_id, facility_id, duration in db_rows:
                 cur.execute(
                     """
                     INSERT INTO dispatch_stops
-                        (dispatch_team_id, stop_order, farm_id, facility_id, name, planned_duration_minutes)
+                        (dispatch_team_id, dispatch_run_id, stop_order, farm_id, facility_id, planned_duration_minutes)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (team_id, stop_order, farm_id, facility_id, name, duration),
+                    (team_id, dispatch_run_id, stop_order, farm_id, facility_id, duration),
                 )
 
             teams_response.append(
