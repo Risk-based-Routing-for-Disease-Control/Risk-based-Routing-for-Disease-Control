@@ -1,12 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { Box, CircularProgress, Paper, Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useNaverMapsScript } from '../../hooks/useNaverMapsScript';
 import { MapControls } from '../map/MapControls';
 import { RouteLegend } from './RouteLegend';
 import { createTooltipContent } from '../../utils/mapTooltip';
 import { flattenRoutePath, type MultiStopRouteResult } from '../../api/directions';
 import type { DispatchStop, DispatchTeam } from '../../types/dispatch';
+import type { Farm } from '../../types/farm';
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
 import { useFacilitiesStore } from '../../store/useFacilitiesStore';
 
@@ -24,6 +27,16 @@ function createFacilityMarkerIcon() {
     content: svg,
     size: new window.naver.maps.Size(size, size),
     anchor: new window.naver.maps.Point(12, 12),
+  };
+}
+
+function createUnselectedFarmIcon() {
+  const size = 14;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="#9E9E9E" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+  return {
+    content: svg,
+    size: new window.naver.maps.Size(size, size),
+    anchor: new window.naver.maps.Point(7, 7),
   };
 }
 
@@ -60,6 +73,8 @@ interface RouteMapProps {
   routesByTeamId?: Record<string, MultiStopRouteResult>;
   isLoadingRoutes?: boolean;
   failedTeamIds?: Set<string>;
+  /** Farms selected for dispatch but not assigned to any team — shown as gray markers when toggled on. */
+  unassignedFarms?: Farm[];
 }
 
 export function RouteMap({
@@ -67,6 +82,7 @@ export function RouteMap({
   routesByTeamId,
   isLoadingRoutes = false,
   failedTeamIds = EMPTY_FAILED,
+  unassignedFarms = [],
 }: RouteMapProps) {
   const mapElRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
@@ -76,7 +92,10 @@ export function RouteMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const facilityMarkersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
+  const unassignedMarkersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const tooltipRef = useRef<any>(null);
+  const [showUnassigned, setShowUnassigned] = useState(false);
   const loaded = useNaverMapsScript(NAVER_CLIENT_ID);
   const facilities = useFacilitiesStore((s) => s.facilities);
   const loadFacilities = useFacilitiesStore((s) => s.loadFacilities);
@@ -130,6 +149,37 @@ export function RouteMap({
       pixelOffset: new naver.maps.Point(0, -16),
     });
   }, [loaded]);
+
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    const { naver } = window;
+    const map = mapRef.current;
+
+    unassignedMarkersRef.current.forEach((m) => m.setMap(null));
+    unassignedMarkersRef.current = [];
+
+    if (!showUnassigned) return;
+
+    unassignedFarms.forEach((farm) => {
+      const marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(farm.lat, farm.lng),
+        map,
+        icon: createUnselectedFarmIcon(),
+        title: farm.name,
+        zIndex: 50,
+      });
+      naver.maps.Event.addListener(marker, 'mouseover', () => {
+        const tooltip = tooltipRef.current;
+        if (!tooltip) return;
+        tooltip.setContent(createTooltipContent(farm.name));
+        tooltip.open(map, marker);
+      });
+      naver.maps.Event.addListener(marker, 'mouseout', () => {
+        tooltipRef.current?.close();
+      });
+      unassignedMarkersRef.current.push(marker);
+    });
+  }, [loaded, showUnassigned, unassignedFarms]);
 
   useEffect(() => {
     if (!loaded || !mapRef.current) return;
@@ -333,6 +383,25 @@ export function RouteMap({
             일부 경로의 실제 도로 안내를 불러오지 못해 직선 경로로 표시 중입니다.
           </Typography>
         </Paper>
+      )}
+      {unassignedFarms.length > 0 && (
+        <Button
+          size="small"
+          variant={showUnassigned ? 'contained' : 'outlined'}
+          startIcon={showUnassigned ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+          onClick={() => setShowUnassigned((v) => !v)}
+          sx={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            bgcolor: showUnassigned ? undefined : 'background.paper',
+            zIndex: 10,
+            fontSize: '0.75rem',
+            px: 1.5,
+          }}
+        >
+          미처리 농장 {showUnassigned ? '숨기기' : '표시'}
+        </Button>
       )}
       <MapControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} onLocate={handleLocate} />
       <RouteLegend teams={teams} />

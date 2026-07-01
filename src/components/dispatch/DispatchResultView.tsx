@@ -18,7 +18,6 @@ export function DispatchResultView({ result }: DispatchResultViewProps) {
   const navigate = useNavigate();
   const resetResult = useDispatchStore((s) => s.resetResult);
   const confirmDispatch = useDispatchStore((s) => s.confirmDispatch);
-
   const handleRestart = () => {
     resetResult();
     navigate('/map');
@@ -48,7 +47,7 @@ export function DispatchResultView({ result }: DispatchResultViewProps) {
 
       <Box sx={{ flex: 1, display: 'flex', minHeight: 0, px: 3, pb: 2, gap: 2 }}>
         <Box sx={{ flex: 1, position: 'relative', minWidth: 0, borderRadius: 1.5, overflow: 'hidden' }}>
-          <RouteMap teams={result.teams} />
+          <RouteMap teams={result.teams} unassignedFarms={result.unassignedFarms} />
         </Box>
         <Box sx={{ width: 320, flexShrink: 0, overflowY: 'auto' }}>
           {result.teams.map((team) => (
