@@ -8,11 +8,11 @@ import random
 from typing import Any, Literal
 
 from services.disinfection_facilities import DisinfectionFacility, load_hwaseong_disinfection_facilities
-from services.experiments.clustering.risk_clustering_v3 import risk_clustering_v3
+from services.experiments.clustering.risk_clustering_v2 import risk_clustering_v2
 from services.osrm_client import OsrmPoint, build_osrm_duration_matrix
 
 
-# NOTE: The optimizer uses risk_clustering_v3 for team buckets, then ALNS per
+# NOTE: The optimizer uses risk_clustering_v2 for team buckets, then ALNS per
 # team to maximize covered risk within the route-time limit.
 
 RiskLevel = Literal["warning", "high", "critical"]
@@ -397,7 +397,7 @@ def _cluster_farms_for_teams(farms: list[DispatchFarm], team_count: int, options
         for farm in farms
     ]
     with redirect_stdout(io.StringIO()):
-        clusters, _ = risk_clustering_v3(clustering_input, cluster_count)
+        clusters, _ = risk_clustering_v2(clustering_input, cluster_count)
 
     buckets: list[list[DispatchFarm]] = [[] for _ in range(cluster_count)]
     for index in range(cluster_count):
