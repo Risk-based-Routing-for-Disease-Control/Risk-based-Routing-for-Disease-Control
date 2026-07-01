@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Farm, RiskLevel } from '../types/farm';
 import type { DispatchResult, DispatchTeam } from '../types/dispatch';
 import { routeAssignment } from '../api/dispatch';
@@ -179,6 +179,7 @@ export const useDispatchStore = create<DispatchState>()(
     }),
     {
       name: 'livestock-dispatch',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         teamCount: state.teamCount,
         selectedFarmIds: state.selectedFarmIds,
