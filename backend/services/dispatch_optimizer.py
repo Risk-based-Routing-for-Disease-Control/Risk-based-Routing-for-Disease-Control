@@ -8,7 +8,7 @@ import random
 from typing import Any, Literal
 
 from services.disinfection_facilities import DisinfectionFacility, load_hwaseong_disinfection_facilities
-from services.experiments.clustering.risk_clustering_v2 import risk_clustering_v2
+from services.experiments.clustering.risk_clustering_v4 import risk_clustering_v4
 from services.osrm_client import OsrmPoint, build_osrm_duration_matrix
 
 
@@ -397,7 +397,7 @@ def _cluster_farms_for_teams(farms: list[DispatchFarm], team_count: int, options
         for farm in farms
     ]
     with redirect_stdout(io.StringIO()):
-        clusters, _ = risk_clustering_v2(clustering_input, cluster_count)
+        clusters, _ = risk_clustering_v4(clustering_input, cluster_count)
 
     buckets: list[list[DispatchFarm]] = [[] for _ in range(cluster_count)]
     for index in range(cluster_count):
