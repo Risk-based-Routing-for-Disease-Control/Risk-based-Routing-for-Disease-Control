@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.responses import FileResponse  # noqa: E402
 
-from routers import directions, dispatch, farms  # noqa: E402
+from routers import directions, dispatch, farms, facilities  # noqa: E402
 from services.db import get_cursor  # noqa: E402
 
 app = FastAPI(title="방역로 (BioRoute) API")
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(farms.router, prefix="/api")
 app.include_router(directions.router, prefix="/api")
 app.include_router(dispatch.router, prefix="/api")
+app.include_router(facilities.router, prefix="/api")
 
 
 @app.get("/api/health")

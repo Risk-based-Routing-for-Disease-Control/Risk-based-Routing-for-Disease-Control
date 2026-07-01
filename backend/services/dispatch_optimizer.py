@@ -7,7 +7,8 @@ import math
 import random
 from typing import Any, Literal
 
-from services.disinfection_facilities import DisinfectionFacility, load_hwaseong_disinfection_facilities
+
+from services.disinfection_facilities import DisinfectionFacility, load_disinfection_facilities
 from services.experiments.clustering.risk_clustering_v4 import risk_clustering_v4
 from services.osrm_client import OsrmPoint, build_osrm_duration_matrix
 
@@ -406,7 +407,8 @@ def _cluster_farms_for_teams(farms: list[DispatchFarm], team_count: int, options
 
 
 async def _build_context(farms: list[DispatchFarm], options: DispatchOptions) -> AlnsContext:
-    facilities = {facility.id: facility for facility in load_hwaseong_disinfection_facilities()}
+    facilities = {facility.id: facility for facility in load_disinfection_facilities()}
+    facilities = {facility.id: facility for facility in load_disinfection_facilities()}
     node_points = {DEPOT_ID: OsrmPoint(options.depot_lat, options.depot_lng)}
     node_points.update({farm.id: OsrmPoint(farm.lat, farm.lng) for farm in farms})
     node_points.update({facility.id: facility.point for facility in facilities.values()})

@@ -3,6 +3,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNaverMapsScript } from '../../hooks/useNaverMapsScript';
 import { useFarmStore } from '../../store/useFarmStore';
 import { useDispatchStore } from '../../store/useDispatchStore';
+import { useFacilitiesStore } from '../../store/useFacilitiesStore';
 import { RISK_LEVEL_COLOR } from '../../constants/risk';
 import type { Farm } from '../../types/farm';
 import { MapLegend } from './MapLegend';
@@ -11,6 +12,16 @@ import { createTooltipContent } from '../../utils/mapTooltip';
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
 
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
+
+function createFacilityMarkerIcon() {
+  const size = 24;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1565C0" stroke="#ffffff" stroke-width="2"/><path d="M12 7v10M7 12h10" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  return {
+    content: svg,
+    size: new window.naver.maps.Size(size, size),
+    anchor: new window.naver.maps.Point(12, 12),
+  };
+}
 
 function createMarkerIcon(farm: Farm, isFocused: boolean, isSelectedForDispatch: boolean) {
   const color = RISK_LEVEL_COLOR[farm.riskLevel];
@@ -40,6 +51,8 @@ export function NaverMap() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const markersRef = useRef<globalThis.Map<string, any>>(new globalThis.Map());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
+  const facilityMarkersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const tooltipRef = useRef<any>(null);
   const loaded = useNaverMapsScript(NAVER_CLIENT_ID);
 
@@ -48,6 +61,12 @@ export function NaverMap() {
   const selectFarm = useFarmStore((s) => s.selectFarm);
   const selectedFarmIds = useDispatchStore((s) => s.selectedFarmIds);
   const toggleFarm = useDispatchStore((s) => s.toggleFarm);
+  const facilities = useFacilitiesStore((s) => s.facilities);
+  const loadFacilities = useFacilitiesStore((s) => s.loadFacilities);
+
+  useEffect(() => {
+    loadFacilities();
+  }, [loadFacilities]);
 
   useEffect(() => {
     if (!loaded || !mapElRef.current || mapRef.current) return;
@@ -100,6 +119,35 @@ export function NaverMap() {
       markersRef.current.set(farm.id, marker);
     });
   }, [loaded, farms, selectedFarmId, selectedFarmIds, selectFarm, toggleFarm]);
+
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    const { naver } = window;
+    const map = mapRef.current;
+
+    facilityMarkersRef.current.forEach((marker) => marker.setMap(null));
+    facilityMarkersRef.current = [];
+
+    facilities.forEach((facility) => {
+      const marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(facility.lat, facility.lng),
+        map,
+        icon: createFacilityMarkerIcon(),
+        title: facility.name,
+        zIndex: 80,
+      });
+      naver.maps.Event.addListener(marker, 'mouseover', () => {
+        const tooltip = tooltipRef.current;
+        if (!tooltip) return;
+        tooltip.setContent(createTooltipContent(facility.name));
+        tooltip.open(map, marker);
+      });
+      naver.maps.Event.addListener(marker, 'mouseout', () => {
+        tooltipRef.current?.close();
+      });
+      facilityMarkersRef.current.push(marker);
+    });
+  }, [loaded, facilities]);
 
   const handleZoomIn = () => {
     const map = mapRef.current;

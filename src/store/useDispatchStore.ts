@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Farm, RiskLevel } from '../types/farm';
 import type { DispatchResult, DispatchTeam } from '../types/dispatch';
 import { routeAssignment } from '../api/dispatch';
+import { useFacilitiesStore } from './useFacilitiesStore';
 import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
@@ -86,11 +87,12 @@ export const useDispatchStore = create<DispatchState>()(
         const { selectedFarmIds, teamCount } = get();
         set({ isDispatching: true, dispatchError: null });
         try {
-          const { result, dispatchRunId } = await routeAssignment({
-            teamCount,
-            farmIds: selectedFarmIds,
-            farms,
-          });
+          const facilities = useFacilitiesStore.getState().facilities;
+          const facilitiesMap = new Map(facilities.map((f) => [f.id, f]));
+          const { result, dispatchRunId } = await routeAssignment(
+            { teamCount, farmIds: selectedFarmIds, farms },
+            facilitiesMap,
+          );
           set({ result, dispatchRunId, isDispatching: false });
         } catch (error) {
           set({

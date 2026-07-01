@@ -8,6 +8,7 @@ import { createTooltipContent } from '../../utils/mapTooltip';
 import { flattenRoutePath, type MultiStopRouteResult } from '../../api/directions';
 import type { DispatchStop, DispatchTeam } from '../../types/dispatch';
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
+import { useFacilitiesStore } from '../../store/useFacilitiesStore';
 
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
 const EMPTY_FAILED: Set<string> = new Set();
@@ -15,6 +16,16 @@ const ROUTE_DEFAULT_STYLE = { strokeWeight: 3, strokeOpacity: 0.85, zIndex: 10 }
 const ROUTE_DIMMED_STYLE = { strokeWeight: 2, strokeOpacity: 0.45, zIndex: 5 };
 const ROUTE_HIGHLIGHT_STYLE = { strokeWeight: 7, strokeOpacity: 1, zIndex: 30 };
 const ROUTE_HIT_STYLE = { strokeWeight: 20, strokeOpacity: 0.001, zIndex: 40 };
+
+function createFacilityMarkerIcon() {
+  const size = 24;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1565C0" stroke="#ffffff" stroke-width="2"/><path d="M12 7v10M7 12h10" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  return {
+    content: svg,
+    size: new window.naver.maps.Size(size, size),
+    anchor: new window.naver.maps.Point(12, 12),
+  };
+}
 
 function createStopIcon(stop: DispatchStop, color: string) {
   const size = 26;
@@ -63,8 +74,45 @@ export function RouteMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const overlaysRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
+  const facilityMarkersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const tooltipRef = useRef<any>(null);
   const loaded = useNaverMapsScript(NAVER_CLIENT_ID);
+  const facilities = useFacilitiesStore((s) => s.facilities);
+  const loadFacilities = useFacilitiesStore((s) => s.loadFacilities);
+
+  useEffect(() => {
+    loadFacilities();
+  }, [loadFacilities]);
+
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    const { naver } = window;
+    const map = mapRef.current;
+
+    facilityMarkersRef.current.forEach((marker) => marker.setMap(null));
+    facilityMarkersRef.current = [];
+
+    facilities.forEach((facility) => {
+      const marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(facility.lat, facility.lng),
+        map,
+        icon: createFacilityMarkerIcon(),
+        title: facility.name,
+        zIndex: 80,
+      });
+      naver.maps.Event.addListener(marker, 'mouseover', () => {
+        const tooltip = tooltipRef.current;
+        if (!tooltip) return;
+        tooltip.setContent(createTooltipContent(facility.name));
+        tooltip.open(map, marker);
+      });
+      naver.maps.Event.addListener(marker, 'mouseout', () => {
+        tooltipRef.current?.close();
+      });
+      facilityMarkersRef.current.push(marker);
+    });
+  }, [loaded, facilities]);
 
   useEffect(() => {
     if (!loaded || !mapElRef.current || mapRef.current) return;

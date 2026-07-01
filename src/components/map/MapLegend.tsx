@@ -25,6 +25,20 @@ export function MapLegend() {
             <Typography variant="body2">{level.label}</Typography>
           </Stack>
         ))}
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5, pt: 0.5, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Box
+            component="svg"
+            xmlns="http://www.w3.org/2000/svg"
+            width={10}
+            height={10}
+            viewBox="0 0 24 24"
+            sx={{ flexShrink: 0 }}
+          >
+            <rect x="2" y="2" width="20" height="20" rx="4" fill="#1565C0" stroke="#ffffff" strokeWidth="2" />
+            <path d="M12 7v10M7 12h10" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+          </Box>
+          <Typography variant="body2">방역시설</Typography>
+        </Stack>
       </Stack>
     </Paper>
   );

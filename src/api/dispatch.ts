@@ -1,4 +1,4 @@
-import type { DispatchResult, DispatchStop, DispatchTeam } from '../types/dispatch';
+import type { DispatchDisinfectionHub, DispatchResult, DispatchStop, DispatchTeam } from '../types/dispatch';
 import type { Farm } from '../types/farm';
 import { normalizeFarmDuration } from '../utils/farmDuration';
 
@@ -67,32 +67,47 @@ export interface RouteAssignmentRequest {
 function mapToDispatchResult(
   data: RouteAssignmentResponse,
   farmMap: Map<string, Farm>,
+  facilitiesMap: Map<string, DispatchDisinfectionHub>,
   teamCount: number,
   selectedFarmIds: string[],
 ): DispatchResult {
   const teams: DispatchTeam[] = data.teams.map((t) => {
+    const hubByOrder = new Map(
+      t.stops
+        .filter((s) => s.facilityId !== null)
+        .map((s) => [s.stopOrder, s]),
+    );
+
+    let farmIndex = 0;
     const stops: DispatchStop[] = t.stops
       .filter((s) => s.farmId !== null)
-      .map((s) => ({
-        farm: farmMap.get(s.farmId!) ?? {
-          id: s.farmId!,
-          code: s.farmId!,
-          name: s.name,
-          lat: 0,
-          lng: 0,
-          riskScore: 0,
-          riskLevel: 'warning' as const,
-          livestockType: '미상',
-          livestockCount: 0,
-          livestockUnit: '두',
-          estimatedDurationMinutes: s.estimatedDuration,
-          address: '',
-          xaiFactors: [],
-          lastUpdatedAt: '',
-        },
-        order: s.stopOrder,
-        status: 'upcoming' as const,
-      }));
+      .map((s) => {
+        const nextHub = hubByOrder.get(s.stopOrder + 1);
+        const disinfectionHub = nextHub?.facilityId
+          ? facilitiesMap.get(nextHub.facilityId)
+          : undefined;
+        return {
+          farm: farmMap.get(s.farmId!) ?? {
+            id: s.farmId!,
+            code: s.farmId!,
+            name: s.name,
+            lat: 0,
+            lng: 0,
+            riskScore: 0,
+            riskLevel: 'warning' as const,
+            livestockType: '미상',
+            livestockCount: 0,
+            livestockUnit: '두',
+            estimatedDurationMinutes: s.estimatedDuration,
+            address: '',
+            xaiFactors: [],
+            lastUpdatedAt: '',
+          },
+          disinfectionHub,
+          order: ++farmIndex,
+          status: 'upcoming' as const,
+        };
+      });
 
     return {
       id: t.teamId,
@@ -118,6 +133,7 @@ function mapToDispatchResult(
 
 export async function routeAssignment(
   request: RouteAssignmentRequest,
+  facilitiesMap: Map<string, DispatchDisinfectionHub> = new Map(),
 ): Promise<{ result: DispatchResult; dispatchRunId: string }> {
   const farmMap = new Map(request.farms.map((f) => [f.id, f]));
 
@@ -143,6 +159,6 @@ export async function routeAssignment(
   }
 
   const data = (await response.json()) as RouteAssignmentResponse;
-  const result = mapToDispatchResult(data, farmMap, request.teamCount, request.farmIds);
+  const result = mapToDispatchResult(data, farmMap, facilitiesMap, request.teamCount, request.farmIds);
   return { result, dispatchRunId: data.dispatchRunId };
 }
