@@ -8,6 +8,7 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import type { DispatchStop } from '../../types/dispatch';
 import { copyText } from '../../utils/clipboard';
+import { formatTimestampLabel } from '../../utils/time';
 
 interface FarmVisitCardProps {
   stop: DispatchStop;
@@ -214,7 +215,7 @@ export function FarmVisitCard({ stop, phone, riskLabel, riskColor, onComplete, o
                 {isCompleted
                   ? `실제 ${stop.actualDurationMinutes ?? stop.farm.estimatedDurationMinutes}분`
                   : isCancelled
-                    ? `취소 ${stop.cancelledAt ?? ''}`
+                    ? `취소 ${formatTimestampLabel(stop.cancelledAt)}`
                     : `${stop.farm.estimatedDurationMinutes}분`}
               </Typography>
             </Stack>

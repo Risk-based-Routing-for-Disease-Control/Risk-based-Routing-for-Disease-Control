@@ -10,16 +10,17 @@ import {
   IconButton,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { MultiStopRouteResult } from '../../api/directions';
 import type { DispatchStop, DispatchTeam } from '../../types/dispatch';
 import { formatDistance, formatDurationFromMs } from '../../utils/routeMetrics';
+import { formatTimestampLabel } from '../../utils/time';
 import { useDispatchStore } from '../../store/useDispatchStore';
 
 interface LiveTeamCardProps {
@@ -88,7 +89,6 @@ export function LiveTeamCard({ team, routeInfo }: LiveTeamCardProps) {
         <Box sx={{ px: 2, pb: 1.5 }}>
           {team.stops.map((stop, index) => {
             const isCompleted = stop.status === 'completed';
-            const isCancelled = stop.status === 'cancelled';
             const leg = routeInfo?.legs[index];
             return (
               <Box key={stop.farm.id}>
@@ -98,41 +98,29 @@ export function LiveTeamCard({ team, routeInfo }: LiveTeamCardProps) {
                   sx={{
                     alignItems: 'center',
                     py: 0.6,
-                    color: isCompleted ? 'text.disabled' : isCancelled ? 'error.main' : 'primary.main',
+                    color: isCompleted ? 'success.main' : 'text.disabled',
                   }}
                 >
-                  {isCompleted ? (
-                    <CheckCircleIcon fontSize="small" />
-                  ) : isCancelled ? (
-                    <CancelIcon fontSize="small" />
-                  ) : (
-                    <ArrowForwardIcon fontSize="small" />
-                  )}
+                  <Tooltip title={isCompleted ? '완료 취소' : '완료 처리'}>
+                    <IconButton
+                      size="small"
+                      color={isCompleted ? 'success' : 'default'}
+                      aria-label={isCompleted ? '완료 취소' : '완료 처리'}
+                      onClick={() => (isCompleted ? setCancelTarget(stop) : openComplete(stop))}
+                    >
+                      {isCompleted ? <CheckCircleIcon fontSize="small" /> : <CheckCircleOutlineIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
                   <Typography
                     variant="body2"
-                    sx={{ flex: 1, color: isCompleted ? 'text.disabled' : isCancelled ? 'error.main' : 'text.primary' }}
+                    sx={{ flex: 1, color: isCompleted ? 'text.primary' : 'text.secondary' }}
                   >
                     {stop.farm.name}
                   </Typography>
                   {isCompleted && (
                     <Typography variant="caption" color="text.secondary">
-                      {`${stop.completedAt} (${stop.actualDurationMinutes ?? stop.farm.estimatedDurationMinutes}분)`}
+                      {`${formatTimestampLabel(stop.completedAt)} (${stop.actualDurationMinutes ?? stop.farm.estimatedDurationMinutes}분)`}
                     </Typography>
-                  )}
-                  {isCancelled && (
-                    <Typography variant="caption" color="error.main">
-                      취소됨
-                    </Typography>
-                  )}
-                  {stop.status === 'upcoming' && (
-                    <IconButton size="small" color="success" aria-label="완료 처리" onClick={() => openComplete(stop)}>
-                      <CheckCircleIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                  {isCompleted && (
-                    <IconButton size="small" color="error" aria-label="완료 취소" onClick={() => setCancelTarget(stop)}>
-                      <CancelIcon fontSize="small" />
-                    </IconButton>
                   )}
                 </Stack>
                 {leg && (

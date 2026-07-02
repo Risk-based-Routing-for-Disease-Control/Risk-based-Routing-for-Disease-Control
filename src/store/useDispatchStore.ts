@@ -131,12 +131,12 @@ export const useDispatchStore = create<DispatchState>()(
       advanceLiveProgress: () =>
         set((state) => {
           if (!state.liveTeams) return state;
-          const label = nowTimeLabel();
+          const timestamp = new Date().toISOString();
           const liveTeams = state.liveTeams.map((team) => {
             const nextIndex = team.stops.findIndex((stop) => stop.status === 'upcoming');
             if (nextIndex === -1) return team;
             const stops = team.stops.map((stop, index) =>
-              index === nextIndex ? { ...stop, status: 'completed' as const, completedAt: label } : stop,
+              index === nextIndex ? { ...stop, status: 'completed' as const, completedAt: timestamp } : stop,
             );
             return { ...team, stops };
           });
@@ -146,7 +146,7 @@ export const useDispatchStore = create<DispatchState>()(
       completeStop: async (teamId, farmId, actualDurationMinutes) => {
         set((state) => {
           if (!state.liveTeams) return state;
-          const label = nowTimeLabel();
+          const timestamp = new Date().toISOString();
           const liveTeams = state.liveTeams.map((team) => {
             if (team.id !== teamId) return team;
             const stops = team.stops.map((stop) =>
@@ -154,7 +154,7 @@ export const useDispatchStore = create<DispatchState>()(
                 ? {
                     ...stop,
                     status: 'completed' as const,
-                    completedAt: label,
+                    completedAt: timestamp,
                     actualDurationMinutes,
                   }
                 : stop,
@@ -177,7 +177,7 @@ export const useDispatchStore = create<DispatchState>()(
       cancelStop: async (teamId, farmId) => {
         set((state) => {
           if (!state.liveTeams) return state;
-          const label = nowTimeLabel();
+          const timestamp = new Date().toISOString();
           const liveTeams = state.liveTeams.map((team) => {
             if (team.id !== teamId) return team;
             const stops = team.stops.map((stop) =>
@@ -187,7 +187,7 @@ export const useDispatchStore = create<DispatchState>()(
                     status: 'upcoming' as const,
                     completedAt: undefined,
                     actualDurationMinutes: undefined,
-                    cancelledAt: label,
+                    cancelledAt: timestamp,
                   }
                 : stop,
             );
