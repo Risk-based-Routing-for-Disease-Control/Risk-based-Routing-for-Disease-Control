@@ -9,7 +9,8 @@ from typing import Any, Literal
 
 
 from services.disinfection_facilities import DisinfectionFacility, load_disinfection_facilities
-from services.experiments.clustering.risk_clustering_v4 import risk_clustering_v4
+from services.experiments.clustering.risk_clustering_v2 import risk_clustering_v2
+from services.experiments.absorb_unvisited_reopt import absorb_unvisited_reopt
 from services.osrm_client import OsrmPoint, build_osrm_duration_matrix
 
 
@@ -398,7 +399,7 @@ def _cluster_farms_for_teams(farms: list[DispatchFarm], team_count: int, options
         for farm in farms
     ]
     with redirect_stdout(io.StringIO()):
-        clusters, _ = risk_clustering_v4(clustering_input, cluster_count)
+        clusters, _ = risk_clustering_v2(clustering_input, cluster_count)
 
     buckets: list[list[DispatchFarm]] = [[] for _ in range(cluster_count)]
     for index in range(cluster_count):
@@ -460,6 +461,19 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
     total_duration = 0
     depot_response = {"name": options.depot_name, "lat": options.depot_lat, "lng": options.depot_lng}
 
+    # for vehicle_id in range(options.team_count):
+    #     bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
+    #     route = [DEPOT_ID, DEPOT_ID]
+    #     if bucket:
+    #         farm_ids = [farm.id for farm in bucket]
+    #         route = greedy_route(farm_ids, ctx, options)
+    #         route = alns_improve(route, farm_ids, ctx, options)
+
+    #     stops: list[dict[str, Any]] = []
+    #     for index, farm_id in enumerate([node_id for node_id in route if node_id in ctx.farm_map]):
+
+    #----- 1단계: 팀별 ALNS 경로 생성
+    routes: list[list[str]] = []
     for vehicle_id in range(options.team_count):
         bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
         route = [DEPOT_ID, DEPOT_ID]
@@ -467,7 +481,17 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
             farm_ids = [farm.id for farm in bucket]
             route = greedy_route(farm_ids, ctx, options)
             route = alns_improve(route, farm_ids, ctx, options)
+        routes.append(route)
 
+    # 2단계: 미처리 농장 흡수
+    all_farm_ids = [farm.id for farm in farms]
+    routes, _ = absorb_unvisited_reopt(routes, all_farm_ids, ctx, options)
+
+    # 3단계: 결과 조립
+    for vehicle_id in range(options.team_count):
+        bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
+        route = routes[vehicle_id]
+    # ------
         stops: list[dict[str, Any]] = []
         for index, farm_id in enumerate([node_id for node_id in route if node_id in ctx.farm_map]):
             farm = ctx.farm_map[farm_id]
