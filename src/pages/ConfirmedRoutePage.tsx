@@ -123,17 +123,18 @@ export function ConfirmedRoutePage() {
                 LIVE
               </Box>
             </Stack>
-            <Button
-              size="small"
-              startIcon={<ShareIcon fontSize="small" />}
-              onClick={() => void handleShare()}
-              disabled={!dispatchRunId}
-            >
-              공유
-            </Button>
-            <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={() => void syncLiveTeams()}>
-              새로고침
-            </Button>
+            <Tooltip title="공유">
+              <span>
+                <IconButton size="small" onClick={() => void handleShare()} disabled={!dispatchRunId}>
+                  <ShareIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="새로고침">
+              <IconButton size="small" onClick={() => void syncLiveTeams()}>
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
           {syncError && (
             <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>
