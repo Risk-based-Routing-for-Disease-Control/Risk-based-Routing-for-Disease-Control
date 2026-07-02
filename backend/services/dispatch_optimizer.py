@@ -456,6 +456,20 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
     random.seed(RANDOM_SEED)
     ctx = await _build_context(farms, options)
     team_buckets = _cluster_farms_for_teams(farms, options.team_count, options)
+    
+     # ── 로그: 입력 ──────────────────────────────────────────────
+    print(f"\n{'='*60}")
+    print(f"[DISPATCH] 입력: 농장 {len(farms)}개, 팀 {options.team_count}개")
+    for farm in sorted(farms, key=lambda f: f.risk_score, reverse=True):
+        print(f"  {farm.name}({farm.id}): 위험도 {farm.risk_score:.3f}, "
+              f"처리 {_service_minutes(farm, options)}분")
+    print(f"\n[CLUSTER] 팀별 배정 결과")
+    for i, bucket in enumerate(team_buckets):
+        svc = sum(_service_minutes(f, options) for f in bucket)
+        names = [f"{f.name}({f.risk_score:.2f})" for f in bucket]
+        print(f"  팀{i+1}: {len(bucket)}개 | 처리시간합 {svc}분 | {names}")
+    # ────────────────────────────────────────────────────────────
+
     teams: list[dict[str, Any]] = []
     assigned_farm_ids: set[str] = set()
     total_duration = 0
@@ -473,20 +487,48 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
     #     for index, farm_id in enumerate([node_id for node_id in route if node_id in ctx.farm_map]):
 
     #----- 1단계: 팀별 ALNS 경로 생성
+    print(f"\n[ALNS] 팀별 경로 최적화 시작")
     routes: list[list[str]] = []
     for vehicle_id in range(options.team_count):
         bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
         route = [DEPOT_ID, DEPOT_ID]
         if bucket:
             farm_ids = [farm.id for farm in bucket]
-            route = greedy_route(farm_ids, ctx, options)
-            route = alns_improve(route, farm_ids, ctx, options)
+
+            greedy = greedy_route(farm_ids, ctx, options)
+            greedy_visited = [n for n in greedy if n in ctx.farm_map]
+            print(f"  팀{vehicle_id+1} Greedy: 위험도 {route_risk(greedy, ctx):.3f}, "
+                  f"{len(greedy_visited)}개, {route_minutes(greedy, ctx, options)}분 | "
+                  f"{[ctx.farm_map[f].name for f in greedy_visited]}")
+
+            route = alns_improve(greedy, farm_ids, ctx, options)
+            alns_visited = [n for n in route if n in ctx.farm_map]
+            alns_risk = route_risk(route, ctx)
+            diff = round(alns_risk - route_risk(greedy, ctx), 3)
+            diff_str = f"▲{diff}" if diff > 0 else ("개선 없음" if diff == 0 else f"▼{abs(diff)}")
+            print(f"  팀{vehicle_id+1} ALNS:   위험도 {alns_risk:.3f}, "
+                  f"{len(alns_visited)}개, {route_minutes(route, ctx, options)}분 | "
+                  f"{diff_str} | {[ctx.farm_map[f].name for f in alns_visited]}")
         routes.append(route)
 
     # 2단계: 미처리 농장 흡수
+    visited_before = {n for r in routes for n in r if n in ctx.farm_map}
+    unvisited_before = [f for f in farms if f.id not in visited_before]
+    print(f"\n[ABSORB] 흡수 전 미처리: {len(unvisited_before)}개")
+    for f in sorted(unvisited_before, key=lambda x: x.risk_score, reverse=True):
+        print(f"  - {f.name}({f.id}): 위험도 {f.risk_score:.3f}")
+        
     all_farm_ids = [farm.id for farm in farms]
-    routes, _ = absorb_unvisited_reopt(routes, all_farm_ids, ctx, options)
-
+    routes, _ = absorb_unvisited_reopt(
+        routes=routes,
+        all_farm_ids=all_farm_ids,
+        ctx=ctx,
+        options=options,
+        alns_improve_fn=alns_improve,
+        route_minutes_fn=route_minutes,
+        route_risk_fn=route_risk,
+        best_feasible_insert_fn=_best_feasible_insert,
+    )
     # 3단계: 결과 조립
     for vehicle_id in range(options.team_count):
         bucket = team_buckets[vehicle_id] if vehicle_id < len(team_buckets) else []
