@@ -43,10 +43,13 @@ function createUnselectedFarmIcon() {
 function createStopIcon(stop: DispatchStop, color: string) {
   const size = 26;
   const isCompleted = stop.status === 'completed';
-  const fill = isCompleted ? '#9E9E9E' : color;
+  const isCancelled = stop.status === 'cancelled';
+  const fill = isCompleted ? '#43A047' : isCancelled ? '#E53935' : color;
   const inner = isCompleted
-    ? '<path d="M7 13.2l3.4 3.4L19.2 7.4" stroke="#ffffff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
-    : `<text x="13" y="17" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff" font-family="sans-serif">${stop.order}</text>`;
+    ? '<path d="M7 13.2l3.4 3.4L19.2 7.4" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    : isCancelled
+      ? '<path d="M8.2 8.2l9.6 9.6M17.8 8.2l-9.6 9.6" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>'
+      : `<text x="13" y="17" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff" font-family="sans-serif">${stop.order}</text>`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="${fill}" stroke="#ffffff" stroke-width="2.5"/>${inner}</svg>`;
 
   return {

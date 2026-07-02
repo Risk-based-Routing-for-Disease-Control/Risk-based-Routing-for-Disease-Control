@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Farm, RiskLevel } from '../types/farm';
 import type { DispatchResult, DispatchTeam } from '../types/dispatch';
-import { routeAssignment } from '../api/dispatch';
+import { cancelDispatchStop, completeDispatchStop, fetchDispatchRunTeams, routeAssignment } from '../api/dispatch';
 import { useFacilitiesStore } from './useFacilitiesStore';
+import { useFarmStore } from './useFarmStore';
 import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
@@ -38,6 +39,9 @@ interface DispatchState {
   confirmed: boolean;
   confirmedSummary: ConfirmedSummary | null;
   lastUpdatedAt: string | null;
+  syncError: string | null;
+  isLoadingRun: boolean;
+  loadRunError: string | null;
   setTeamCount: (count: number) => void;
   setRiskFilter: (value: RiskLevel | 'all') => void;
   setTypeFilter: (value: string) => void;
@@ -48,8 +52,10 @@ interface DispatchState {
   resetResult: () => void;
   confirmDispatch: () => void;
   advanceLiveProgress: () => void;
-  completeStop: (teamId: string, farmId: string, actualDurationMinutes: number) => void;
-  cancelStop: (teamId: string, farmId: string) => void;
+  completeStop: (teamId: string, farmId: string, actualDurationMinutes: number) => Promise<void>;
+  cancelStop: (teamId: string, farmId: string) => Promise<void>;
+  syncLiveTeams: () => Promise<void>;
+  loadDispatchRun: (dispatchRunId: string) => Promise<void>;
 }
 
 export const useDispatchStore = create<DispatchState>()(
@@ -67,6 +73,9 @@ export const useDispatchStore = create<DispatchState>()(
       confirmed: false,
       confirmedSummary: null,
       lastUpdatedAt: null,
+      syncError: null,
+      isLoadingRun: false,
+      loadRunError: null,
 
       setTeamCount: (count) => set({ teamCount: Math.max(1, count) }),
       setRiskFilter: (value) => set({ riskFilter: value }),
@@ -134,7 +143,7 @@ export const useDispatchStore = create<DispatchState>()(
           return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
         }),
 
-      completeStop: (teamId, farmId, actualDurationMinutes) =>
+      completeStop: async (teamId, farmId, actualDurationMinutes) => {
         set((state) => {
           if (!state.liveTeams) return state;
           const label = nowTimeLabel();
@@ -153,9 +162,19 @@ export const useDispatchStore = create<DispatchState>()(
             return { ...team, stops };
           });
           return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
-        }),
+        });
 
-      cancelStop: (teamId, farmId) =>
+        const { dispatchRunId } = get();
+        if (!dispatchRunId) return;
+        try {
+          await completeDispatchStop(dispatchRunId, teamId, farmId, actualDurationMinutes);
+          set({ syncError: null });
+        } catch (error) {
+          set({ syncError: error instanceof Error ? error.message : '완료 처리 서버 반영에 실패했습니다.' });
+        }
+      },
+
+      cancelStop: async (teamId, farmId) => {
         set((state) => {
           if (!state.liveTeams) return state;
           const label = nowTimeLabel();
@@ -175,7 +194,54 @@ export const useDispatchStore = create<DispatchState>()(
             return { ...team, stops };
           });
           return { liveTeams, lastUpdatedAt: nowTimeLabel(true) };
-        }),
+        });
+
+        const { dispatchRunId } = get();
+        if (!dispatchRunId) return;
+        try {
+          await cancelDispatchStop(dispatchRunId, teamId, farmId);
+          set({ syncError: null });
+        } catch (error) {
+          set({ syncError: error instanceof Error ? error.message : '취소 처리 서버 반영에 실패했습니다.' });
+        }
+      },
+
+      syncLiveTeams: async () => {
+        const { dispatchRunId, liveTeams } = get();
+        if (!dispatchRunId || !liveTeams) return;
+        try {
+          const farmMap = new Map(useFarmStore.getState().farms.map((f) => [f.id, f]));
+          const facilitiesMap = new Map(useFacilitiesStore.getState().facilities.map((f) => [f.id, f]));
+          const teams = await fetchDispatchRunTeams(dispatchRunId, farmMap, facilitiesMap);
+          set({ liveTeams: teams, lastUpdatedAt: nowTimeLabel(true), syncError: null });
+        } catch (error) {
+          set({ syncError: error instanceof Error ? error.message : '실시간 현황 동기화에 실패했습니다.' });
+        }
+      },
+
+      loadDispatchRun: async (dispatchRunId) => {
+        set({ isLoadingRun: true, loadRunError: null });
+        try {
+          const farmMap = new Map(useFarmStore.getState().farms.map((f) => [f.id, f]));
+          const facilitiesMap = new Map(useFacilitiesStore.getState().facilities.map((f) => [f.id, f]));
+          const teams = await fetchDispatchRunTeams(dispatchRunId, farmMap, facilitiesMap);
+          const totalDurationMinutes = teams.reduce((sum, t) => sum + t.totalDurationMinutes, 0);
+          const selectedFarmCount = teams.reduce((sum, t) => sum + t.stops.length, 0);
+          set({
+            dispatchRunId,
+            liveTeams: teams,
+            confirmed: true,
+            confirmedSummary: { selectedFarmCount, teamCount: teams.length, totalDurationMinutes },
+            lastUpdatedAt: nowTimeLabel(true),
+            isLoadingRun: false,
+          });
+        } catch (error) {
+          set({
+            isLoadingRun: false,
+            loadRunError: error instanceof Error ? error.message : '배차 결과를 불러오지 못했습니다.',
+          });
+        }
+      },
     }),
     {
       name: 'livestock-dispatch',
@@ -184,6 +250,7 @@ export const useDispatchStore = create<DispatchState>()(
         teamCount: state.teamCount,
         selectedFarmIds: state.selectedFarmIds,
         result: state.result,
+        dispatchRunId: state.dispatchRunId,
         isDispatching: state.isDispatching,
         dispatchError: state.dispatchError,
         liveTeams: state.liveTeams,

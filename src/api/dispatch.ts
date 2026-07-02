@@ -33,6 +33,10 @@ interface ApiStop {
   facilityId: string | null;
   name: string;
   estimatedDuration: number;
+  status?: 'upcoming' | 'completed' | 'cancelled';
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  actualDurationMinutes?: number | null;
 }
 
 interface ApiTeam {
@@ -105,7 +109,10 @@ function mapToDispatchResult(
           },
           disinfectionHub,
           order: ++farmIndex,
-          status: 'upcoming' as const,
+          status: s.status ?? 'upcoming',
+          completedAt: s.completedAt ?? undefined,
+          cancelledAt: s.cancelledAt ?? undefined,
+          actualDurationMinutes: s.actualDurationMinutes ?? undefined,
         };
       });
 
@@ -161,4 +168,54 @@ export async function routeAssignment(
   const data = (await response.json()) as RouteAssignmentResponse;
   const result = mapToDispatchResult(data, farmMap, facilitiesMap, request.teamCount, request.farmIds);
   return { result, dispatchRunId: data.dispatchRunId };
+}
+
+// ── 확정 경로 폴링 (GET /api/dispatch-runs/{id}) ──────────────────────────
+
+export async function fetchDispatchRunTeams(
+  dispatchRunId: string,
+  farmMap: Map<string, Farm>,
+  facilitiesMap: Map<string, DispatchDisinfectionHub>,
+): Promise<DispatchTeam[]> {
+  const response = await fetch(`${API_BASE_URL}/api/dispatch-runs/${dispatchRunId}`);
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Dispatch run fetch failed (${response.status}): ${detail}`);
+  }
+  const data = (await response.json()) as RouteAssignmentResponse;
+  const result = mapToDispatchResult(data, farmMap, facilitiesMap, data.teams.length, []);
+  return result.teams;
+}
+
+// ── 필드 완료/취소 처리 (PATCH /api/dispatch-runs/.../stops/...) ──────────
+
+export async function completeDispatchStop(
+  dispatchRunId: string,
+  teamId: string,
+  farmId: string,
+  actualDurationMinutes: number,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/dispatch-runs/${dispatchRunId}/teams/${teamId}/stops/${farmId}/complete`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actualDurationMinutes }),
+    },
+  );
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Complete stop failed (${response.status}): ${detail}`);
+  }
+}
+
+export async function cancelDispatchStop(dispatchRunId: string, teamId: string, farmId: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/dispatch-runs/${dispatchRunId}/teams/${teamId}/stops/${farmId}/cancel`,
+    { method: 'PATCH' },
+  );
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Cancel stop failed (${response.status}): ${detail}`);
+  }
 }

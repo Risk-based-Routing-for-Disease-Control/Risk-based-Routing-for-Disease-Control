@@ -1,25 +1,51 @@
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Alert, Box, Button, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ShareIcon from '@mui/icons-material/Share';
 import { useDispatchStore } from '../store/useDispatchStore';
 import { useTeamRoutes } from '../hooks/useTeamRoutes';
+import { useInterval } from '../hooks/useInterval';
 import { RouteMap } from '../components/route/RouteMap';
 import { LiveTeamCard } from '../components/route/LiveTeamCard';
+import { copyText } from '../utils/clipboard';
 import { durationLabel } from '../utils/time';
 import type { DispatchTeam } from '../types/dispatch';
 
 const NO_TEAMS: DispatchTeam[] = [];
+const POLL_INTERVAL_MS = 8000;
 
 export function ConfirmedRoutePage() {
   const navigate = useNavigate();
   const liveTeams = useDispatchStore((s) => s.liveTeams);
   const confirmedSummary = useDispatchStore((s) => s.confirmedSummary);
   const lastUpdatedAt = useDispatchStore((s) => s.lastUpdatedAt);
+  const dispatchRunId = useDispatchStore((s) => s.dispatchRunId);
+  const syncError = useDispatchStore((s) => s.syncError);
+  const syncLiveTeams = useDispatchStore((s) => s.syncLiveTeams);
   const { routesByTeamId, isLoading: isLoadingRoutes, failedTeamIds } = useTeamRoutes(
     liveTeams ?? NO_TEAMS,
     Boolean(liveTeams),
   );
+
+  useInterval(() => void syncLiveTeams(), liveTeams && dispatchRunId ? POLL_INTERVAL_MS : null);
+
+  const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+
+  const handleShare = async () => {
+    if (!dispatchRunId) return;
+    const shareUrl = `${window.location.origin}/mobile/${dispatchRunId}`;
+    try {
+      await copyText(shareUrl);
+      setShareError(null);
+    } catch (error) {
+      setShareError(error instanceof Error ? error.message : '링크 복사에 실패했습니다.');
+    } finally {
+      setShareSnackbarOpen(true);
+    }
+  };
 
   const allDone = Boolean(liveTeams && liveTeams.every((team) => team.stops.every((stop) => stop.status !== 'upcoming')));
 
@@ -97,10 +123,23 @@ export function ConfirmedRoutePage() {
                 LIVE
               </Box>
             </Stack>
-            <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={() => void useDispatchStore.persist.rehydrate()}>
+            <Button
+              size="small"
+              startIcon={<ShareIcon fontSize="small" />}
+              onClick={() => void handleShare()}
+              disabled={!dispatchRunId}
+            >
+              공유
+            </Button>
+            <Button size="small" startIcon={<RefreshIcon fontSize="small" />} onClick={() => void syncLiveTeams()}>
               새로고침
             </Button>
           </Stack>
+          {syncError && (
+            <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>
+              {`동기화 실패: ${syncError}`}
+            </Typography>
+          )}
           <Box sx={{ flex: 1, overflowY: 'auto' }}>
             {liveTeams.map((team) => (
               <LiveTeamCard key={team.id} team={team} routeInfo={routesByTeamId[team.id]} />
@@ -108,6 +147,22 @@ export function ConfirmedRoutePage() {
           </Box>
         </Box>
       </Box>
+
+      <Snackbar
+        open={shareSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setShareSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setShareSnackbarOpen(false)}
+          severity={shareError ? 'error' : 'success'}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {shareError ?? '모바일 공유 링크가 클립보드에 복사되었습니다.'}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

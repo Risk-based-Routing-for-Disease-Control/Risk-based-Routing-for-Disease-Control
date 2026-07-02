@@ -9,13 +9,19 @@ import { ConfirmedRoutePage } from './pages/ConfirmedRoutePage';
 import { MobileFieldPage } from './pages/MobileFieldPage';
 import { useDispatchStore } from './store/useDispatchStore';
 import { useFarmStore } from './store/useFarmStore';
+import { useFacilitiesStore } from './store/useFacilitiesStore';
 
 function App() {
   const loadFarms = useFarmStore((s) => s.loadFarms);
+  const loadFacilities = useFacilitiesStore((s) => s.loadFacilities);
 
   useEffect(() => {
     void loadFarms();
   }, [loadFarms]);
+
+  useEffect(() => {
+    void loadFacilities();
+  }, [loadFacilities]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -33,6 +39,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/mobile" element={<MobileFieldPage />} />
+          <Route path="/mobile/:dispatchRunId" element={<MobileFieldPage />} />
           <Route element={<AppLayout />}>
             <Route index element={<Navigate to="/map" replace />} />
             <Route path="/map" element={<MapPage />} />

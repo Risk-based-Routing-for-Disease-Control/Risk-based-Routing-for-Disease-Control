@@ -1,13 +1,26 @@
 import { useState } from 'react';
-import { Box, Collapse, IconButton, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { MultiStopRouteResult } from '../../api/directions';
-import type { DispatchTeam } from '../../types/dispatch';
+import type { DispatchStop, DispatchTeam } from '../../types/dispatch';
 import { formatDistance, formatDurationFromMs } from '../../utils/routeMetrics';
+import { useDispatchStore } from '../../store/useDispatchStore';
 
 interface LiveTeamCardProps {
   team: DispatchTeam;
@@ -16,8 +29,36 @@ interface LiveTeamCardProps {
 
 export function LiveTeamCard({ team, routeInfo }: LiveTeamCardProps) {
   const [expanded, setExpanded] = useState(true);
+  const completeStop = useDispatchStore((s) => s.completeStop);
+  const cancelStop = useDispatchStore((s) => s.cancelStop);
+  const [completeTarget, setCompleteTarget] = useState<DispatchStop | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<DispatchStop | null>(null);
+  const [durationValue, setDurationValue] = useState('');
   const completedCount = team.stops.filter((stop) => stop.status === 'completed').length;
   const cancelledCount = team.stops.filter((stop) => stop.status === 'cancelled').length;
+
+  const openComplete = (stop: DispatchStop) => {
+    setDurationValue(String(stop.farm.estimatedDurationMinutes));
+    setCompleteTarget(stop);
+  };
+
+  const closeComplete = () => {
+    setCompleteTarget(null);
+    setDurationValue('');
+  };
+
+  const submitComplete = () => {
+    const minutes = Number(durationValue);
+    if (!completeTarget || !Number.isInteger(minutes) || minutes < 1 || minutes > 600) return;
+    void completeStop(team.id, completeTarget.farm.id, minutes);
+    closeComplete();
+  };
+
+  const submitCancel = () => {
+    if (!cancelTarget) return;
+    void cancelStop(team.id, cancelTarget.farm.id);
+    setCancelTarget(null);
+  };
 
   return (
     <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, mb: 2, overflow: 'hidden' }}>
@@ -83,6 +124,16 @@ export function LiveTeamCard({ team, routeInfo }: LiveTeamCardProps) {
                       취소됨
                     </Typography>
                   )}
+                  {stop.status === 'upcoming' && (
+                    <IconButton size="small" color="success" aria-label="완료 처리" onClick={() => openComplete(stop)}>
+                      <CheckCircleIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                  {isCompleted && (
+                    <IconButton size="small" color="error" aria-label="완료 취소" onClick={() => setCancelTarget(stop)}>
+                      <CancelIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </Stack>
                 {leg && (
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', pl: 3.5, color: 'text.disabled' }}>
@@ -97,6 +148,41 @@ export function LiveTeamCard({ team, routeInfo }: LiveTeamCardProps) {
           })}
         </Box>
       </Collapse>
+
+      <Dialog open={Boolean(completeTarget)} onClose={closeComplete} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ fontWeight: 800 }}>완료 처리</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>{`${completeTarget?.farm.name ?? ''} 방문을 완료 처리하시겠습니까?`}</Typography>
+          <TextField
+            label="실제 소요시간 (분)"
+            type="number"
+            fullWidth
+            value={durationValue}
+            onChange={(e) => setDurationValue(e.target.value)}
+            slotProps={{ htmlInput: { min: 1, max: 600 } }}
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeComplete}>취소</Button>
+          <Button variant="contained" color="success" onClick={submitComplete}>
+            확인
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={Boolean(cancelTarget)} onClose={() => setCancelTarget(null)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ fontWeight: 800 }}>완료 취소</DialogTitle>
+        <DialogContent>
+          <Typography>{`${cancelTarget?.farm.name ?? ''} 완료 처리를 취소하시겠습니까?`}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelTarget(null)}>아니요</Button>
+          <Button variant="contained" color="error" onClick={submitCancel}>
+            예
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

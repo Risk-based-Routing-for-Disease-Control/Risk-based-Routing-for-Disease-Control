@@ -44,37 +44,66 @@ _DUMMY_FARMS: list[dict[str, Any]] = [
 ]
 
 
+def _query_farms_from_postgres() -> list[dict[str, Any]]:
+    from services.db import get_cursor
+    with get_cursor() as cur:
+        cur.execute("""
+            SELECT
+                f.farm_id                     AS id,
+                f.farm_code                   AS "farmCode",
+                f.name,
+                f.address,
+                f.lat,
+                f.lng,
+                f.livestock_type              AS "livestockType",
+                f.livestock_count             AS "livestockCount",
+                f.livestock_unit              AS "livestockUnit",
+                f.estimated_duration_minutes  AS "estimatedDurationMinutes",
+                frs.risk_score   AS "riskScore",
+                frs.risk_level   AS "riskLevel",
+                frs.risk_date    AS "riskDate"
+            FROM farms f
+            LEFT JOIN LATERAL (
+                SELECT risk_score, risk_level, risk_date
+                FROM farm_risk_scores
+                WHERE farm_id = f.farm_id
+                ORDER BY risk_date DESC
+                LIMIT 1
+            ) frs ON true
+        """)
+        rows = cur.fetchall()
+    return [dict(row) for row in rows]
+
+
 def get_farms_from_db() -> list[dict[str, Any]]:
     """농장 목록을 조회한다.
 
     PostgreSQL farms 테이블에 데이터가 있으면 DB값을 반환하고,
     비어있거나 오류 시 더미 데이터를 fallback으로 반환한다.
+    배차 실행 등 내부 로직에서 조회 실패 원인을 신경 쓸 필요가 없는
+    경우에 사용한다. 화면에 폴백 여부를 알려야 하는 경우에는
+    get_farms_with_status()를 사용할 것.
     """
     try:
-        from services.db import get_cursor
-        with get_cursor() as cur:
-            cur.execute("""
-                SELECT
-                    f.farm_id        AS id,
-                    f.farm_code      AS "farmCode",
-                    f.name,
-                    f.lat,
-                    f.lng,
-                    frs.risk_score   AS "riskScore",
-                    frs.risk_level   AS "riskLevel",
-                    frs.risk_date    AS "riskDate"
-                FROM farms f
-                LEFT JOIN LATERAL (
-                    SELECT risk_score, risk_level, risk_date
-                    FROM farm_risk_scores
-                    WHERE farm_id = f.farm_id
-                    ORDER BY risk_date DESC
-                    LIMIT 1
-                ) frs ON true
-            """)
-            rows = cur.fetchall()
+        rows = _query_farms_from_postgres()
         if rows:
-            return [dict(row) for row in rows]
+            return rows
     except Exception:
         pass
     return _DUMMY_FARMS
+
+
+def get_farms_with_status() -> tuple[list[dict[str, Any]], str, str | None]:
+    """농장 목록과 함께 실제 DB 조회 성공 여부를 반환한다.
+
+    (farms, source, error) 튜플을 반환하며 source는 "db" 또는 "dummy".
+    DB 조회가 실패하거나 비어있을 때 화면에서 폴백 여부를 알 수 있도록
+    원인을 숨기지 않는다.
+    """
+    try:
+        rows = _query_farms_from_postgres()
+    except Exception as exc:
+        return _DUMMY_FARMS, "dummy", str(exc)
+    if rows:
+        return rows, "db", None
+    return _DUMMY_FARMS, "dummy", "DB에 farms 데이터가 없습니다."

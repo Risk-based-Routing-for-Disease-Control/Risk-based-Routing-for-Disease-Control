@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from services.databricks_client import get_farms_from_db
+from services.databricks_client import get_farms_from_db, get_farms_with_status
 
 router = APIRouter(tags=["farms"])
 
@@ -105,8 +105,13 @@ _FARM_DETAILS: dict[str, dict] = {
 
 @router.get("/farms")
 def list_farms():
-    """농장 목록을 리턴한다. 현재는 더미 데이터, 추후 Databricks 쿼리로 교체."""
-    return get_farms_from_db()
+    """농장 목록을 리턴한다.
+
+    DB 조회가 실패하거나 비어있으면 더미 데이터로 폴백하되,
+    source/error 필드로 폴백 여부를 프론트가 알 수 있게 한다.
+    """
+    farms, source, error = get_farms_with_status()
+    return {"farms": farms, "source": source, "error": error}
 
 
 @router.get("/farms/{farm_id}")

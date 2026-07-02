@@ -45,9 +45,21 @@ function toFarm(api: ApiFarm): Farm {
   };
 }
 
-export async function fetchFarms(): Promise<Farm[]> {
+export interface FetchFarmsResult {
+  farms: Farm[];
+  source: 'db' | 'dummy';
+  error: string | null;
+}
+
+interface FarmsListResponse {
+  farms: ApiFarm[];
+  source: 'db' | 'dummy';
+  error: string | null;
+}
+
+export async function fetchFarms(): Promise<FetchFarmsResult> {
   const response = await fetch(`${API_BASE_URL}/api/farms`);
   if (!response.ok) throw new Error(`farms fetch failed: ${response.status}`);
-  const data = (await response.json()) as ApiFarm[];
-  return data.map(toFarm);
+  const data = (await response.json()) as FarmsListResponse;
+  return { farms: data.farms.map(toFarm), source: data.source, error: data.error };
 }

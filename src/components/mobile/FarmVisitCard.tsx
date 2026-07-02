@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent } from 'react';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -7,6 +7,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import type { DispatchStop } from '../../types/dispatch';
+import { copyText } from '../../utils/clipboard';
 
 interface FarmVisitCardProps {
   stop: DispatchStop;
@@ -18,23 +19,6 @@ interface FarmVisitCardProps {
 }
 
 const swipeThreshold = 82;
-
-async function copyText(value: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = value;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-}
 
 function telHref(phone: string) {
   const digits = phone.replace(/[^\d+]/g, '');
@@ -236,6 +220,23 @@ export function FarmVisitCard({ stop, phone, riskLabel, riskColor, onComplete, o
             </Stack>
           </Box>
         </Stack>
+        {(canComplete || canCancel) && (
+          <Button
+            fullWidth
+            variant="contained"
+            color={canComplete ? 'success' : 'error'}
+            startIcon={canComplete ? <CheckCircleOutlineIcon /> : <CloseIcon />}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (canComplete) onComplete();
+              else onCancel();
+            }}
+            sx={{ mt: 1.4, fontWeight: 800 }}
+          >
+            {canComplete ? '완료 처리' : '완료 취소'}
+          </Button>
+        )}
       </Box>
     </Box>
   );

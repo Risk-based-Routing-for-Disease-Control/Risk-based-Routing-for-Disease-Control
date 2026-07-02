@@ -8,9 +8,29 @@ from pydantic import BaseModel, Field
 
 from services.databricks_client import get_farms_from_db
 from services.db import get_cursor
+from services.disinfection_facilities import load_disinfection_facilities
 from services.dispatch_optimizer import DispatchOptions, farm_from_dict, solve_dispatch
 
 router = APIRouter(tags=["dispatch"])
+
+
+def _name_lookup_maps() -> tuple[dict[str, str], dict[str, str]]:
+    """farm_id -> name, facility_id -> name 조회용 맵을 생성한다.
+
+    dispatch_stops.name(비정규화 컬럼, 과거 버그 대응으로 추가됨)에 의존하지 않고
+    조회 시점 최신 이름을 반영하기 위함.
+    """
+    farm_names = {str(f.get("id")): f.get("name", "") for f in get_farms_from_db()}
+    facility_names = {f.id: f.name for f in load_disinfection_facilities()}
+    return farm_names, facility_names
+
+
+def _resolve_stop_name(row: dict, farm_names: dict[str, str], facility_names: dict[str, str]) -> str:
+    if row["farm_id"] is not None:
+        return farm_names.get(row["farm_id"], row.get("name") or row["farm_id"])
+    if row["facility_id"] is not None:
+        return facility_names.get(row["facility_id"], row.get("name") or row["facility_id"])
+    return row.get("name") or ""
 
 
 # ── 기존 엔드포인트 (DB 데이터 준비 전까지 유지) ──────────────────────────────
@@ -84,7 +104,7 @@ def _build_stops_response(
 
     for s in optimizer_stops:
         farm = s["farm"]
-        farm_row = (order, farm["id"], None, farm["estimatedDurationMinutes"])
+        farm_row = (order, farm["id"], None, farm["estimatedDurationMinutes"], farm["name"])
         stops_response.append(
             {
                 "stopOrder": order,
@@ -92,6 +112,10 @@ def _build_stops_response(
                 "facilityId": None,
                 "name": farm["name"],
                 "estimatedDuration": farm["estimatedDurationMinutes"],
+                "status": "upcoming",
+                "completedAt": None,
+                "cancelledAt": None,
+                "actualDurationMinutes": None,
             }
         )
         db_rows.append(farm_row)
@@ -99,7 +123,7 @@ def _build_stops_response(
 
         hub = s.get("disinfectionHub")
         if hub:
-            hub_row = (order, None, hub["id"], disinfect_minutes)
+            hub_row = (order, None, hub["id"], disinfect_minutes, hub["name"])
             stops_response.append(
                 {
                     "stopOrder": order,
@@ -107,6 +131,10 @@ def _build_stops_response(
                     "facilityId": hub["id"],
                     "name": hub["name"],
                     "estimatedDuration": disinfect_minutes,
+                    "status": "upcoming",
+                    "completedAt": None,
+                    "cancelledAt": None,
+                    "actualDurationMinutes": None,
                 }
             )
             db_rows.append(hub_row)
@@ -177,14 +205,15 @@ async def route_assignment(request: RouteAssignmentRequest):
             )
 
             stops_resp, db_rows = _build_stops_response(team["stops"], request.disinfectServiceMinutes)
-            for stop_order, farm_id, facility_id, duration in db_rows:
+            for stop_order, farm_id, facility_id, duration, name in db_rows:
                 cur.execute(
                     """
                     INSERT INTO dispatch_stops
-                        (dispatch_team_id, dispatch_run_id, stop_order, farm_id, facility_id, planned_duration_minutes)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                        (dispatch_team_id, dispatch_run_id, stop_order, farm_id, facility_id,
+                         planned_duration_minutes, name)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (team_id, dispatch_run_id, stop_order, farm_id, facility_id, duration),
+                    (team_id, dispatch_run_id, stop_order, farm_id, facility_id, duration, name),
                 )
 
             teams_response.append(
@@ -233,6 +262,8 @@ def get_dispatch_run(dispatch_run_id: str):
         )
         teams = cur.fetchall()
 
+        farm_names, facility_names = _name_lookup_maps()
+
         teams_response = []
         for team in teams:
             cur.execute(
@@ -252,8 +283,12 @@ def get_dispatch_run(dispatch_run_id: str):
                             "stopOrder": s["stop_order"],
                             "farmId": s["farm_id"],
                             "facilityId": s["facility_id"],
-                            "name": s["name"],
+                            "name": _resolve_stop_name(s, farm_names, facility_names),
                             "estimatedDuration": s["planned_duration_minutes"],
+                            "status": s["status"],
+                            "completedAt": s["completed_at"].isoformat() if s["completed_at"] else None,
+                            "cancelledAt": s["cancelled_at"].isoformat() if s["cancelled_at"] else None,
+                            "actualDurationMinutes": s["actual_duration_minutes"],
                         }
                         for s in stops
                     ],
@@ -273,3 +308,63 @@ def get_dispatch_run(dispatch_run_id: str):
         "teams": teams_response,
         "unassignedFarms": unassigned,
     }
+
+
+class CompleteStopRequest(BaseModel):
+    actualDurationMinutes: int = Field(..., ge=1, le=600)
+
+
+def _stop_response(row: dict, farm_names: dict[str, str], facility_names: dict[str, str]) -> dict:
+    return {
+        "stopOrder": row["stop_order"],
+        "farmId": row["farm_id"],
+        "facilityId": row["facility_id"],
+        "name": _resolve_stop_name(row, farm_names, facility_names),
+        "estimatedDuration": row["planned_duration_minutes"],
+        "status": row["status"],
+        "completedAt": row["completed_at"].isoformat() if row["completed_at"] else None,
+        "cancelledAt": row["cancelled_at"].isoformat() if row["cancelled_at"] else None,
+        "actualDurationMinutes": row["actual_duration_minutes"],
+    }
+
+
+@router.patch("/dispatch-runs/{dispatch_run_id}/teams/{team_id}/stops/{farm_id}/complete")
+def complete_stop(dispatch_run_id: str, team_id: str, farm_id: str, request: CompleteStopRequest):
+    """모바일 필드 화면에서 농장 방문 완료 처리를 서버에 반영한다."""
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE dispatch_stops
+            SET status = 'completed', completed_at = NOW(), cancelled_at = NULL,
+                actual_duration_minutes = %s
+            WHERE dispatch_run_id = %s AND dispatch_team_id = %s AND farm_id = %s
+            RETURNING *
+            """,
+            (request.actualDurationMinutes, dispatch_run_id, team_id, farm_id),
+        )
+        row = cur.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="해당 방문 지점을 찾을 수 없습니다.")
+    farm_names, facility_names = _name_lookup_maps()
+    return _stop_response(row, farm_names, facility_names)
+
+
+@router.patch("/dispatch-runs/{dispatch_run_id}/teams/{team_id}/stops/{farm_id}/cancel")
+def cancel_stop(dispatch_run_id: str, team_id: str, farm_id: str):
+    """완료 처리를 취소하고 다시 방문 예정 상태로 되돌린다."""
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE dispatch_stops
+            SET status = 'upcoming', completed_at = NULL, actual_duration_minutes = NULL,
+                cancelled_at = NOW()
+            WHERE dispatch_run_id = %s AND dispatch_team_id = %s AND farm_id = %s
+            RETURNING *
+            """,
+            (dispatch_run_id, team_id, farm_id),
+        )
+        row = cur.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="해당 방문 지점을 찾을 수 없습니다.")
+    farm_names, facility_names = _name_lookup_maps()
+    return _stop_response(row, farm_names, facility_names)
