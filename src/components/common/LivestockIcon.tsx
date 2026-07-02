@@ -13,7 +13,8 @@ const LIVESTOCK_ICON_BY_TYPE: Record<string, string> = {
 };
 
 export function LivestockIcon({ livestockType, size = 24 }: LivestockIconProps) {
-  const iconSrc = LIVESTOCK_ICON_BY_TYPE[livestockType] ?? LIVESTOCK_ICON_BY_TYPE.기타가금;
+  const baseType = livestockType.split('-')[0];
+  const iconSrc = LIVESTOCK_ICON_BY_TYPE[baseType] ?? LIVESTOCK_ICON_BY_TYPE.기타가금;
 
   return (
     <Box
