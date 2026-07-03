@@ -67,6 +67,8 @@ export interface RouteAssignmentRequest {
   disinfectServiceMinutes?: number;
   allowUnassigned?: boolean;
   emergencyMode?: boolean;
+  emergencyCenterLat?: number;
+  emergencyCenterLng?: number;
 }
 
 function mapToDispatchResult(
@@ -159,6 +161,8 @@ export async function routeAssignment(
       disinfectServiceMinutes: request.disinfectServiceMinutes,
       allowUnassigned: request.allowUnassigned,
       emergencyMode: request.emergencyMode,
+      emergencyCenterLat: request.emergencyCenterLat,
+      emergencyCenterLng: request.emergencyCenterLng,
     }),
   });
 

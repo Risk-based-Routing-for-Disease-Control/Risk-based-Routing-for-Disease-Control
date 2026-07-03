@@ -14,6 +14,7 @@ from services.dispatch_optimizer import (
     farm_from_dict,
     solve_dispatch,
     solve_emergency_dispatch,
+    solve_emergency_dispatch_zoned,
 )
 
 router = APIRouter(tags=["dispatch"])
@@ -87,6 +88,8 @@ class RouteAssignmentRequest(BaseModel):
     disinfectServiceMinutes: int = 20
     allowUnassigned: bool = True
     emergencyMode: bool = False
+    emergencyCenterLat: float | None = None
+    emergencyCenterLng: float | None = None
 
 
 def _determine_status(teams: list, unassigned: list) -> str:
@@ -167,9 +170,16 @@ async def route_assignment(request: RouteAssignmentRequest):
         depot_lat=request.depotLat,
         depot_lng=request.depotLng,
     )
-    solver = solve_emergency_dispatch if request.emergencyMode else solve_dispatch
     try:
-        result = await solver(selected, options)
+        if request.emergencyMode and request.emergencyCenterLat is not None and request.emergencyCenterLng is not None:
+            result = await solve_emergency_dispatch_zoned(
+                selected, options, request.emergencyCenterLat, request.emergencyCenterLng,
+            )
+        elif request.emergencyMode:
+            # 중심점이 없으면(방어적 폴백) 기존처럼 전체를 엄격 규칙으로 처리
+            result = await solve_emergency_dispatch(selected, options)
+        else:
+            result = await solve_dispatch(selected, options)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RuntimeError as exc:

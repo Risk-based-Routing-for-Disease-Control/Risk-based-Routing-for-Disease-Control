@@ -115,7 +115,7 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
               fontWeight: 700,
             }}
           >
-            {`🚨 비상 대응 모드 — ${emergencyLabel ?? ''} · 팀당 농장 1곳만 방문 후 소독 경유, 즉시 복귀합니다.`}
+            {`🚨 비상 대응 모드 — ${emergencyLabel ?? ''} · 3km 이내는 팀당 농장 1곳만 방문 후 소독 경유, 즉시 복귀합니다. 3km 밖은 일반 배차로 처리됩니다.`}
           </Paper>
         )}
 

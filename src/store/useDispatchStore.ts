@@ -99,9 +99,16 @@ export const useDispatchStore = create<DispatchState>()(
         try {
           const facilities = useFacilitiesStore.getState().facilities;
           const facilitiesMap = new Map(facilities.map((f) => [f.id, f]));
-          const emergencyMode = useEmergencyModeStore.getState().isActive;
+          const emergencyState = useEmergencyModeStore.getState();
           const { result, dispatchRunId } = await routeAssignment(
-            { teamCount, farmIds: selectedFarmIds, farms, emergencyMode },
+            {
+              teamCount,
+              farmIds: selectedFarmIds,
+              farms,
+              emergencyMode: emergencyState.isActive,
+              emergencyCenterLat: emergencyState.center?.lat,
+              emergencyCenterLng: emergencyState.center?.lng,
+            },
             facilitiesMap,
           );
           set({ result, dispatchRunId, isDispatching: false });

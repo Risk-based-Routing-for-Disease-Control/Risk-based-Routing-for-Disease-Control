@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stdout
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import io
 import math
 import random
@@ -642,3 +642,73 @@ async def solve_emergency_dispatch(farms: list[DispatchFarm], options: DispatchO
         "teamCount": options.team_count,
         "totalDurationMinutes": total_duration,
     }
+
+
+EMERGENCY_ZONE_RADIUS_KM = 3.0  # NaverMap.tsx의 EMERGENCY_RADII_METERS[0](3000m)와 반드시 일치
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    r = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
+    return r * 2 * math.asin(math.sqrt(a))
+
+
+def _merge_dispatch_results(parts: list[dict[str, Any]], total_team_count: int) -> dict[str, Any]:
+    all_teams: list[dict[str, Any]] = []
+    all_unassigned: list[dict[str, Any]] = []
+    total_duration = 0
+    total_selected = 0
+    for part in parts:
+        all_teams.extend(part["teams"])
+        all_unassigned.extend(part["unassignedFarms"])
+        total_duration += part["totalDurationMinutes"]
+        total_selected += part["selectedFarmCount"]
+
+    renumbered = [
+        {**team, "id": f"team-{i + 1}", "label": f"팀 {i + 1}", "color": TEAM_COLORS[i % len(TEAM_COLORS)]}
+        for i, team in enumerate(all_teams)
+    ]
+    return {
+        "teams": renumbered,
+        "unassignedFarms": all_unassigned,
+        "selectedFarmCount": total_selected,
+        "teamCount": total_team_count,
+        "totalDurationMinutes": total_duration,
+    }
+
+
+async def solve_emergency_dispatch_zoned(
+    farms: list[DispatchFarm], options: DispatchOptions, center_lat: float, center_lng: float,
+) -> dict[str, Any]:
+    """비상모드: 중심점 3km 이내는 팀당 농장 1곳, 밖은 일반 다중 농장 최적화.
+
+    3km 이내 농장 수만큼 팀을 먼저 1:1로 확보하고(초과분은 위험도 낮은 순으로 미배정),
+    남은 팀이 3km 밖 농장을 일반 ALNS로 처리한다(남은 팀이 없으면 밖 농장은 전부 미배정).
+    """
+    in_zone = [f for f in farms if _haversine_km(f.lat, f.lng, center_lat, center_lng) <= EMERGENCY_ZONE_RADIUS_KM]
+    in_zone_ids = {f.id for f in in_zone}
+    out_zone = [f for f in farms if f.id not in in_zone_ids]
+
+    in_zone_team_count = min(len(in_zone), options.team_count)
+    remaining_team_count = options.team_count - in_zone_team_count
+
+    parts: list[dict[str, Any]] = []
+    if in_zone_team_count > 0:
+        parts.append(await solve_emergency_dispatch(in_zone, replace(options, team_count=in_zone_team_count)))
+    if out_zone:
+        if remaining_team_count > 0:
+            parts.append(await solve_dispatch(out_zone, replace(options, team_count=remaining_team_count)))
+        else:
+            parts.append(
+                {
+                    "teams": [],
+                    "unassignedFarms": [farm_to_response(f) for f in out_zone],
+                    "selectedFarmCount": len(out_zone),
+                    "teamCount": 0,
+                    "totalDurationMinutes": 0,
+                }
+            )
+
+    return _merge_dispatch_results(parts, options.team_count)
