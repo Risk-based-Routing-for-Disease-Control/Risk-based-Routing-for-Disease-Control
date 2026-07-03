@@ -103,6 +103,9 @@ export function AppHeader() {
                           {`${c.disease ?? '질병 미상'} · ${c.region ?? '지역 미상'}`}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          {`농장 ID ${c.farmId ?? '-'}`}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                           {`확진일 ${c.confirmedAt ?? '-'}`}
                         </Typography>
                       </Box>

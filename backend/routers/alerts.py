@@ -13,8 +13,10 @@ def _extract_cases(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for item in items:
         item_is_test = bool(item.get("is_test"))
         for new_item in item.get("new_items", []):
+            farm_id = new_item.get("farm_id") or new_item.get("farmId") or new_item.get("id")
             cases.append(
                 {
+                    "farmId": farm_id,
                     "farmName": new_item.get("farm_name"),
                     "disease": new_item.get("disease"),
                     "region": new_item.get("region"),

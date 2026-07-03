@@ -1,6 +1,7 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
 
 export interface OutbreakCase {
+  farmId: string | null;
   farmName: string | null;
   disease: string | null;
   region: string | null;
