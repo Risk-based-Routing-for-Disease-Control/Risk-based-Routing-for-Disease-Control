@@ -1,4 +1,4 @@
-import type { Farm, RiskLevel } from '../types/farm';
+import type { Farm, RiskLevel, XaiFactor } from '../types/farm';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
 
@@ -9,6 +9,7 @@ interface ApiFarm {
   lat: number;
   lng: number;
   riskScore: number;
+  riskScoreId?: number;
   riskLevel: string;
   riskDate?: string;
   livestockType?: string;
@@ -16,6 +17,7 @@ interface ApiFarm {
   livestockUnit?: string;
   estimatedDurationMinutes?: number;
   address?: string;
+  xaiFactors?: XaiFactor[];
 }
 
 function toRiskLevel(raw: string): RiskLevel {
@@ -40,7 +42,7 @@ function toFarm(api: ApiFarm): Farm {
     livestockUnit: api.livestockUnit ?? '두',
     estimatedDurationMinutes: api.estimatedDurationMinutes ?? 30,
     address: api.address ?? '',
-    xaiFactors: [],
+    xaiFactors: api.xaiFactors ?? [],
     lastUpdatedAt: api.riskDate ?? '',
   };
 }

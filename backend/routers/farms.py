@@ -129,6 +129,8 @@ def get_farm(farm_id: str):
         "lat": base["lat"],
         "lng": base["lng"],
         "riskScore": round(float(base["riskScore"]) * 100, 1),
+        "riskScoreId": base.get("riskScoreId"),
         "riskLevel": _normalize_risk_level(str(base["riskLevel"])),
+        "xaiFactors": base.get("xaiFactors", []),
         **detail,
     }

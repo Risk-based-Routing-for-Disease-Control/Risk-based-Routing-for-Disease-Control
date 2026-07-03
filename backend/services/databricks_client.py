@@ -1,6 +1,8 @@
 """Databricks SQL 연결 준비. 실제 키가 발급되기 전까지는 더미 데이터를 리턴한다."""
 
 import os
+from collections import defaultdict
+from decimal import Decimal
 from typing import Any
 
 
@@ -34,14 +36,190 @@ def get_connection():
     return sql.connect(server_hostname=host, http_path=http_path, access_token=token)
 
 
-_DUMMY_FARMS: list[dict[str, Any]] = [
-    {"id": "farm-001", "name": "행복한농장", "lat": 37.619, "lng": 127.181, "riskLevel": "critical", "riskScore": 0.78},
-    {"id": "farm-002", "name": "의정부농장", "lat": 37.74, "lng": 127.03, "riskLevel": "critical", "riskScore": 0.81},
-    {"id": "farm-003", "name": "광주농장", "lat": 37.432, "lng": 127.255, "riskLevel": "critical", "riskScore": 0.74},
-    {"id": "farm-004", "name": "양주농장", "lat": 37.832, "lng": 127.05, "riskLevel": "high", "riskScore": 0.55},
-    {"id": "farm-005", "name": "고양농장", "lat": 37.662, "lng": 126.834, "riskLevel": "high", "riskScore": 0.48},
-    {"id": "farm-006", "name": "파주농장", "lat": 37.76, "lng": 126.78, "riskLevel": "warning", "riskScore": 0.18},
+_DUMMY_XAI_FACTORS: list[list[dict[str, Any]]] = [
+    [
+        {
+            "id": "dummy-xai-001-bird",
+            "factorCode": "bird_obs_count_30d_10km",
+            "label": "최근 30일 반경 10km 내 철새 관측 증가",
+            "icon": "/xai-icons/bird.png",
+            "weight": 0.42,
+        },
+        {
+            "id": "dummy-xai-001-virus",
+            "factorCode": "infected_farm_count_3km",
+            "label": "반경 3km 내 감염농장 증가",
+            "icon": "/xai-icons/virus.png",
+            "weight": 0.31,
+        },
+        {
+            "id": "dummy-xai-001-wetland",
+            "factorCode": "within_migratory_bird_site_10km",
+            "label": "철새도래지 10km 이내 위치",
+            "icon": "/xai-icons/wetland.png",
+            "weight": 0.24,
+        },
+    ],
+    [
+        {
+            "id": "dummy-xai-002-duck",
+            "factorCode": "duck_obs_count_30d_5km",
+            "label": "최근 30일 반경 5km 내 오리류 관측 증가",
+            "icon": "/xai-icons/duck.png",
+            "weight": 0.38,
+        },
+        {
+            "id": "dummy-xai-002-humidity",
+            "factorCode": "humidity",
+            "label": "습도 증가",
+            "icon": "/xai-icons/humidity.png",
+            "weight": 0.28,
+        },
+        {
+            "id": "dummy-xai-002-rain",
+            "factorCode": "precipitation_7d",
+            "label": "최근 7일 강수량 증가",
+            "icon": "/xai-icons/rain.png",
+            "weight": 0.21,
+        },
+    ],
+    [
+        {
+            "id": "dummy-xai-003-chicken",
+            "factorCode": "poultry_species_0",
+            "label": "닭 농장 여부",
+            "icon": "/xai-icons/chicken.png",
+            "weight": 0.36,
+        },
+        {
+            "id": "dummy-xai-003-flock",
+            "factorCode": "flock_size",
+            "label": "농장 사육 규모",
+            "icon": "/xai-icons/chicken.png",
+            "weight": 0.27,
+        },
+        {
+            "id": "dummy-xai-003-wind",
+            "factorCode": "wind_speed_avg_7d",
+            "label": "최근 7일 평균 풍속 영향",
+            "icon": "/xai-icons/wind.png",
+            "weight": 0.18,
+        },
+    ],
 ]
+
+
+_DUMMY_FARMS: list[dict[str, Any]] = [
+    {
+        "id": "farm-001",
+        "name": "행복한농장",
+        "lat": 37.619,
+        "lng": 127.181,
+        "riskLevel": "critical",
+        "riskScore": 0.78,
+        "xaiFactors": _DUMMY_XAI_FACTORS[0],
+    },
+    {
+        "id": "farm-002",
+        "name": "의정부농장",
+        "lat": 37.74,
+        "lng": 127.03,
+        "riskLevel": "critical",
+        "riskScore": 0.81,
+        "xaiFactors": _DUMMY_XAI_FACTORS[1],
+    },
+    {
+        "id": "farm-003",
+        "name": "광주농장",
+        "lat": 37.432,
+        "lng": 127.255,
+        "riskLevel": "critical",
+        "riskScore": 0.74,
+        "xaiFactors": _DUMMY_XAI_FACTORS[2],
+    },
+    {
+        "id": "farm-004",
+        "name": "양주농장",
+        "lat": 37.832,
+        "lng": 127.05,
+        "riskLevel": "high",
+        "riskScore": 0.55,
+        "xaiFactors": _DUMMY_XAI_FACTORS[0],
+    },
+    {
+        "id": "farm-005",
+        "name": "고양농장",
+        "lat": 37.662,
+        "lng": 126.834,
+        "riskLevel": "high",
+        "riskScore": 0.48,
+        "xaiFactors": _DUMMY_XAI_FACTORS[1],
+    },
+    {
+        "id": "farm-006",
+        "name": "파주농장",
+        "lat": 37.76,
+        "lng": 126.78,
+        "riskLevel": "warning",
+        "riskScore": 0.18,
+        "xaiFactors": _DUMMY_XAI_FACTORS[2],
+    },
+]
+
+
+def _icon_path(icon: str | None) -> str:
+    filename = (icon or "poultry.png").strip()
+    return filename if filename.startswith("/") else f"/xai-icons/{filename}"
+
+
+def _to_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return float(value)
+    return float(value)
+
+
+def _query_xai_factors_by_risk_score_ids(risk_score_ids: list[int]) -> dict[int, list[dict[str, Any]]]:
+    if not risk_score_ids:
+        return {}
+
+    from services.db import get_cursor
+
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                risk_score_id,
+                xai_factor_id AS id,
+                factor_code AS "factorCode",
+                label,
+                icon,
+                weight
+            FROM farm_xai_factors
+            WHERE risk_score_id = ANY(%s)
+            ORDER BY risk_score_id, weight DESC, created_at DESC
+            """,
+            (risk_score_ids,),
+        )
+        rows = cur.fetchall()
+
+    grouped: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        risk_score_id = row.get("risk_score_id")
+        if risk_score_id is None or len(grouped[int(risk_score_id)]) >= 3:
+            continue
+        grouped[int(risk_score_id)].append(
+            {
+                "id": str(row["id"]),
+                "factorCode": row.get("factorCode") or "",
+                "label": row.get("label") or row.get("factorCode") or "위험 요인",
+                "icon": _icon_path(row.get("icon")),
+                "weight": _to_float(row.get("weight")),
+            }
+        )
+
+    return dict(grouped)
 
 
 def _query_farms_from_postgres() -> list[dict[str, Any]]:
@@ -59,12 +237,13 @@ def _query_farms_from_postgres() -> list[dict[str, Any]]:
                 f.livestock_count             AS "livestockCount",
                 f.livestock_unit              AS "livestockUnit",
                 f.estimated_duration_minutes  AS "estimatedDurationMinutes",
+                frs.risk_score_id AS "riskScoreId",
                 frs.risk_score   AS "riskScore",
                 frs.risk_level   AS "riskLevel",
                 frs.risk_date    AS "riskDate"
             FROM farms f
             LEFT JOIN LATERAL (
-                SELECT risk_score, risk_level, risk_date
+                SELECT risk_score_id, risk_score, risk_level, risk_date
                 FROM farm_risk_scores
                 WHERE farm_id = f.farm_id
                 ORDER BY risk_date DESC
@@ -72,7 +251,24 @@ def _query_farms_from_postgres() -> list[dict[str, Any]]:
             ) frs ON true
         """)
         rows = cur.fetchall()
-    return [dict(row) for row in rows]
+
+    farms = [dict(row) for row in rows]
+    risk_score_ids = [
+        int(farm["riskScoreId"])
+        for farm in farms
+        if farm.get("riskScoreId") is not None
+    ]
+    xai_factors_by_risk_score_id = _query_xai_factors_by_risk_score_ids(risk_score_ids)
+
+    for farm in farms:
+        risk_score_id = farm.get("riskScoreId")
+        farm["xaiFactors"] = (
+            xai_factors_by_risk_score_id.get(int(risk_score_id), [])
+            if risk_score_id is not None
+            else []
+        )
+
+    return farms
 
 
 def get_farms_from_db() -> list[dict[str, Any]]:

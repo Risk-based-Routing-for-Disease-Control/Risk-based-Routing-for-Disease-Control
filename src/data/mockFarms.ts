@@ -1,5 +1,77 @@
 import type { Farm } from '../types/farm';
 
+const sampleXaiFactors = [
+  {
+    id: 'mock-xai-bird',
+    factorCode: 'bird_obs_count_30d_10km',
+    label: '최근 30일 반경 10km 내 철새 관측 증가',
+    icon: '/xai-icons/bird.png',
+    weight: 0.42,
+  },
+  {
+    id: 'mock-xai-virus',
+    factorCode: 'infected_farm_count_3km',
+    label: '반경 3km 내 감염농장 증가',
+    icon: '/xai-icons/virus.png',
+    weight: 0.31,
+  },
+  {
+    id: 'mock-xai-wetland',
+    factorCode: 'within_migratory_bird_site_10km',
+    label: '철새도래지 10km 이내 위치',
+    icon: '/xai-icons/wetland.png',
+    weight: 0.24,
+  },
+];
+
+const duckXaiFactors = [
+  {
+    id: 'mock-xai-duck',
+    factorCode: 'duck_obs_count_30d_5km',
+    label: '최근 30일 반경 5km 내 오리류 관측 증가',
+    icon: '/xai-icons/duck.png',
+    weight: 0.38,
+  },
+  {
+    id: 'mock-xai-humidity',
+    factorCode: 'humidity',
+    label: '습도 증가',
+    icon: '/xai-icons/humidity.png',
+    weight: 0.28,
+  },
+  {
+    id: 'mock-xai-rain',
+    factorCode: 'precipitation_7d',
+    label: '최근 7일 강수량 증가',
+    icon: '/xai-icons/rain.png',
+    weight: 0.21,
+  },
+];
+
+const poultryXaiFactors = [
+  {
+    id: 'mock-xai-chicken',
+    factorCode: 'poultry_species_0',
+    label: '닭 농장 여부',
+    icon: '/xai-icons/chicken.png',
+    weight: 0.36,
+  },
+  {
+    id: 'mock-xai-flock',
+    factorCode: 'flock_size',
+    label: '농장 사육 규모',
+    icon: '/xai-icons/chicken.png',
+    weight: 0.27,
+  },
+  {
+    id: 'mock-xai-wind',
+    factorCode: 'wind_speed_avg_7d',
+    label: '최근 7일 평균 풍속 영향',
+    icon: '/xai-icons/wind.png',
+    weight: 0.18,
+  },
+];
+
 export const mockFarms: Farm[] = [
   {
     id: 'hwaseong-001',
@@ -14,7 +86,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 25,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-nearby-outbreak', label: '최근 주변 발생 이력', icon: 'truck' }],
+    xaiFactors: sampleXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {
@@ -30,7 +102,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 45,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-migratory-bird', label: '철새 도래지 근접', icon: 'bird' }, { id: 'xai-duck-risk', label: '오리 사육 위험', icon: 'bird' }],
+    xaiFactors: duckXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {
@@ -46,7 +118,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 45,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-duck-risk', label: '오리 사육 위험', icon: 'bird' }, { id: 'xai-nearby-outbreak', label: '최근 주변 발생 이력', icon: 'truck' }],
+    xaiFactors: poultryXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {
@@ -62,7 +134,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 30,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-migratory-bird', label: '철새 도래지 근접', icon: 'bird' }, { id: 'xai-duck-risk', label: '오리 사육 위험', icon: 'bird' }],
+    xaiFactors: duckXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {
@@ -78,7 +150,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 20,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-duck-risk', label: '오리 사육 위험', icon: 'bird' }],
+    xaiFactors: duckXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {
@@ -94,7 +166,7 @@ export const mockFarms: Farm[] = [
     livestockUnit: '수',
     estimatedDurationMinutes: 25,
     address: '경기도 화성시',
-    xaiFactors: [{ id: 'xai-duck-risk', label: '오리 사육 위험', icon: 'bird' }],
+    xaiFactors: duckXaiFactors,
     lastUpdatedAt: '2026.06.25 00:00',
   },
   {

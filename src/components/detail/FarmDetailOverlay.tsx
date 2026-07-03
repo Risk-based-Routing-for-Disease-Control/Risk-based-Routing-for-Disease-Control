@@ -1,19 +1,12 @@
 import { Box, Chip, IconButton, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import FlightIcon from '@mui/icons-material/Flight';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { useFarmStore } from '../../store/useFarmStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL } from '../../constants/risk';
 import { getLivestockDisplayLabel } from '../../utils/livestock';
 import { LivestockIcon } from '../common/LivestockIcon';
-import type { XaiFactor } from '../../types/farm';
+import { XaiFactorIcons } from './XaiFactorIcons';
 
 const MAX_VISIBLE_XAI_FACTORS = 3;
-
-const XAI_ICONS: Record<XaiFactor['icon'], typeof FlightIcon> = {
-  bird: FlightIcon,
-  truck: LocalShippingIcon,
-};
 
 export function FarmDetailOverlay() {
   const farms = useFarmStore((s) => s.farms);
@@ -115,28 +108,8 @@ export function FarmDetailOverlay() {
             }}
           />
           {visibleXaiFactors.length > 0 && (
-            <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-              {visibleXaiFactors.map((factor) => {
-                const Icon = XAI_ICONS[factor.icon];
-                return (
-                  <Chip
-                    key={factor.id}
-                    size="small"
-                    icon={<Icon fontSize="small" sx={{ color: '#C62828 !important' }} />}
-                    label={factor.label}
-                    sx={{
-                      maxWidth: '100%',
-                      bgcolor: '#FDECEA',
-                      color: '#C62828',
-                      fontWeight: 600,
-                      '& .MuiChip-label': {
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      },
-                    }}
-                  />
-                );
-              })}
+            <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+              <XaiFactorIcons factors={visibleXaiFactors} size={30} imageSize={18} />
               {hiddenXaiFactorCount > 0 && (
                 <Chip
                   size="small"

@@ -4,16 +4,9 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import FlightIcon from '@mui/icons-material/Flight';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { useFarmStore } from '../../store/useFarmStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL } from '../../constants/risk';
-import type { XaiFactor } from '../../types/farm';
-
-const XAI_ICONS: Record<XaiFactor['icon'], typeof FlightIcon> = {
-  bird: FlightIcon,
-  truck: LocalShippingIcon,
-};
+import { XaiFactorIcons } from './XaiFactorIcons';
 
 const PANEL_WIDTH = 360;
 
@@ -106,17 +99,7 @@ export function FarmDetailPanel() {
                   탐지된 주요 위험 요인이 없습니다
                 </Typography>
               )}
-              {farm.xaiFactors.map((factor) => {
-                const Icon = XAI_ICONS[factor.icon];
-                return (
-                  <Chip
-                    key={factor.id}
-                    icon={<Icon fontSize="small" sx={{ color: '#C62828 !important' }} />}
-                    label={factor.label}
-                    sx={{ bgcolor: '#FDECEA', color: '#C62828', fontWeight: 600 }}
-                  />
-                );
-              })}
+              <XaiFactorIcons factors={farm.xaiFactors} />
             </Stack>
           </Box>
           <Divider />
