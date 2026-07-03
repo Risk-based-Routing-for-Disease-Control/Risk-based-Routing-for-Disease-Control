@@ -5,6 +5,10 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
+XAI_MIN_WEIGHT = float(os.getenv("XAI_MIN_WEIGHT", "0.05"))
+XAI_MIN_TOP_RATIO = float(os.getenv("XAI_MIN_TOP_RATIO", "0.4"))
+XAI_MAX_FACTORS = int(os.getenv("XAI_MAX_FACTORS", "3"))
+
 
 def get_connection():
     """Databricks SQL Warehouse 커넥션을 생성한다.
@@ -50,14 +54,14 @@ _DUMMY_XAI_FACTORS: list[list[dict[str, Any]]] = [
             "factorCode": "infected_farm_count_3km",
             "label": "반경 3km 내 감염농장 증가",
             "icon": "/xai-icons/virus.png",
-            "weight": 0.31,
+            "weight": 0.12,
         },
         {
             "id": "dummy-xai-001-wetland",
             "factorCode": "within_migratory_bird_site_10km",
             "label": "철새도래지 10km 이내 위치",
             "icon": "/xai-icons/wetland.png",
-            "weight": 0.24,
+            "weight": -0.18,
         },
     ],
     [
@@ -66,21 +70,21 @@ _DUMMY_XAI_FACTORS: list[list[dict[str, Any]]] = [
             "factorCode": "duck_obs_count_30d_5km",
             "label": "최근 30일 반경 5km 내 오리류 관측 증가",
             "icon": "/xai-icons/duck.png",
-            "weight": 0.38,
+            "weight": 0.08,
         },
         {
             "id": "dummy-xai-002-humidity",
             "factorCode": "humidity",
             "label": "습도 증가",
             "icon": "/xai-icons/humidity.png",
-            "weight": 0.28,
+            "weight": 0.04,
         },
         {
             "id": "dummy-xai-002-rain",
             "factorCode": "precipitation_7d",
             "label": "최근 7일 강수량 증가",
             "icon": "/xai-icons/rain.png",
-            "weight": 0.21,
+            "weight": -0.03,
         },
     ],
     [
@@ -180,6 +184,28 @@ def _to_float(value: Any) -> float | None:
     return float(value)
 
 
+def _filter_xai_factors(factors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    positive_factors = [
+        factor
+        for factor in factors
+        if factor.get("weight") is not None and float(factor["weight"]) > 0
+    ]
+    if not positive_factors:
+        return []
+
+    top_weight = max(float(factor["weight"]) for factor in positive_factors)
+    threshold = max(XAI_MIN_WEIGHT, top_weight * XAI_MIN_TOP_RATIO)
+    return [
+        factor
+        for factor in positive_factors
+        if float(factor["weight"]) >= threshold
+    ][:XAI_MAX_FACTORS]
+
+
+def _with_filtered_xai_factors(farm: dict[str, Any]) -> dict[str, Any]:
+    return {**farm, "xaiFactors": _filter_xai_factors(farm.get("xaiFactors", []))}
+
+
 def _query_xai_factors_by_risk_score_ids(risk_score_ids: list[int]) -> dict[int, list[dict[str, Any]]]:
     if not risk_score_ids:
         return {}
@@ -207,7 +233,7 @@ def _query_xai_factors_by_risk_score_ids(risk_score_ids: list[int]) -> dict[int,
     grouped: dict[int, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         risk_score_id = row.get("risk_score_id")
-        if risk_score_id is None or len(grouped[int(risk_score_id)]) >= 3:
+        if risk_score_id is None:
             continue
         grouped[int(risk_score_id)].append(
             {
@@ -219,7 +245,10 @@ def _query_xai_factors_by_risk_score_ids(risk_score_ids: list[int]) -> dict[int,
             }
         )
 
-    return dict(grouped)
+    return {
+        risk_score_id: _filter_xai_factors(factors)
+        for risk_score_id, factors in grouped.items()
+    }
 
 
 def _query_farms_from_postgres() -> list[dict[str, Any]]:
@@ -286,7 +315,7 @@ def get_farms_from_db() -> list[dict[str, Any]]:
             return rows
     except Exception:
         pass
-    return _DUMMY_FARMS
+    return [_with_filtered_xai_factors(farm) for farm in _DUMMY_FARMS]
 
 
 def get_farms_with_status() -> tuple[list[dict[str, Any]], str, str | None]:
@@ -299,7 +328,7 @@ def get_farms_with_status() -> tuple[list[dict[str, Any]], str, str | None]:
     try:
         rows = _query_farms_from_postgres()
     except Exception as exc:
-        return _DUMMY_FARMS, "dummy", str(exc)
+        return [_with_filtered_xai_factors(farm) for farm in _DUMMY_FARMS], "dummy", str(exc)
     if rows:
         return rows, "db", None
-    return _DUMMY_FARMS, "dummy", "DB에 farms 데이터가 없습니다."
+    return [_with_filtered_xai_factors(farm) for farm in _DUMMY_FARMS], "dummy", "DB에 farms 데이터가 없습니다."

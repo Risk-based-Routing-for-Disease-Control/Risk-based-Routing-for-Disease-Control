@@ -52,10 +52,13 @@ DIST_DIR = os.path.join(os.path.dirname(__file__), "..", "dist")
 if os.path.isdir(DIST_DIR):
     _assets_dir = os.path.join(DIST_DIR, "assets")
     _icons_dir = os.path.join(DIST_DIR, "livestock-icons")
+    _xai_icons_dir = os.path.join(DIST_DIR, "xai-icons")
     if os.path.isdir(_assets_dir):
         app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
     if os.path.isdir(_icons_dir):
         app.mount("/livestock-icons", StaticFiles(directory=_icons_dir), name="livestock-icons")
+    if os.path.isdir(_xai_icons_dir):
+        app.mount("/xai-icons", StaticFiles(directory=_xai_icons_dir), name="xai-icons")
 
     @app.get("/favicon.svg")
     def favicon():
