@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
 import { useNaverMapsScript } from '../../hooks/useNaverMapsScript';
 import { useFarmStore } from '../../store/useFarmStore';
 import { useDispatchStore } from '../../store/useDispatchStore';
 import { useFacilitiesStore } from '../../store/useFacilitiesStore';
+import { useEmergencyModeStore } from '../../store/useEmergencyModeStore';
 import { RISK_LEVEL_COLOR } from '../../constants/risk';
 import type { Farm } from '../../types/farm';
 import { MapLegend } from './MapLegend';
@@ -12,6 +13,12 @@ import { createTooltipContent } from '../../utils/mapTooltip';
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
 
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
+const EMERGENCY_RADII_METERS = [3000, 7000, 11000];
+const EMERGENCY_RADIUS_STYLES = [
+  { strokeColor: '#E53935', fillColor: '#E53935', fillOpacity: 0.08 },
+  { strokeColor: '#FB8C00', fillColor: '#FB8C00', fillOpacity: 0.05 },
+  { strokeColor: '#FDD835', fillColor: '#FDD835', fillOpacity: 0.03 },
+];
 
 function createFacilityMarkerIcon() {
   const size = 24;
@@ -53,6 +60,8 @@ export function NaverMap() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const facilityMarkersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
+  const emergencyCirclesRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Naver Maps SDK
   const tooltipRef = useRef<any>(null);
   const loaded = useNaverMapsScript(NAVER_CLIENT_ID);
 
@@ -63,6 +72,11 @@ export function NaverMap() {
   const toggleFarm = useDispatchStore((s) => s.toggleFarm);
   const facilities = useFacilitiesStore((s) => s.facilities);
   const loadFacilities = useFacilitiesStore((s) => s.loadFacilities);
+  const emergencyActive = useEmergencyModeStore((s) => s.isActive);
+  const emergencyCenter = useEmergencyModeStore((s) => s.center);
+  const emergencyLabel = useEmergencyModeStore((s) => s.label);
+  const emergencyAwaitingPick = useEmergencyModeStore((s) => s.awaitingPick);
+  const exitEmergencyMode = useEmergencyModeStore((s) => s.exit);
 
   useEffect(() => {
     loadFacilities();
@@ -82,6 +96,10 @@ export function NaverMap() {
       backgroundColor: 'transparent',
       disableAnchor: true,
       pixelOffset: new naver.maps.Point(0, -16),
+    });
+    naver.maps.Event.addListener(mapRef.current, 'click', (e: { coord: { lat: () => number; lng: () => number } }) => {
+      if (!useEmergencyModeStore.getState().awaitingPick) return;
+      useEmergencyModeStore.getState().setCenter({ lat: e.coord.lat(), lng: e.coord.lng() });
     });
   }, [loaded]);
 
@@ -104,6 +122,10 @@ export function NaverMap() {
         zIndex: isFocused ? 220 : isSelectedForDispatch ? 180 : 100,
       });
       naver.maps.Event.addListener(marker, 'click', () => {
+        if (useEmergencyModeStore.getState().awaitingPick) {
+          useEmergencyModeStore.getState().setCenter({ lat: farm.lat, lng: farm.lng });
+          return;
+        }
         selectFarm(farm.id);
         toggleFarm(farm.id);
       });
@@ -149,6 +171,37 @@ export function NaverMap() {
     });
   }, [loaded, facilities]);
 
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    const { naver } = window;
+    const map = mapRef.current;
+
+    emergencyCirclesRef.current.forEach((circle) => circle.setMap(null));
+    emergencyCirclesRef.current = [];
+
+    if (!emergencyActive || !emergencyCenter) return;
+
+    const center = new naver.maps.LatLng(emergencyCenter.lat, emergencyCenter.lng);
+    let outerCircle = null;
+    // 바깥쪽부터 그려서 안쪽 원이 위에 오도록
+    for (let i = EMERGENCY_RADII_METERS.length - 1; i >= 0; i -= 1) {
+      const circle = new naver.maps.Circle({
+        map,
+        center,
+        radius: EMERGENCY_RADII_METERS[i],
+        strokeWeight: 2,
+        strokeOpacity: 0.9,
+        ...EMERGENCY_RADIUS_STYLES[i],
+      });
+      emergencyCirclesRef.current.push(circle);
+      if (i === EMERGENCY_RADII_METERS.length - 1) outerCircle = circle;
+    }
+
+    if (outerCircle) {
+      map.fitBounds(outerCircle.getBounds());
+    }
+  }, [loaded, emergencyActive, emergencyCenter]);
+
   const handleZoomIn = () => {
     const map = mapRef.current;
     if (!map) return;
@@ -186,6 +239,36 @@ export function NaverMap() {
         <Box sx={fillCenterStyle}>
           <CircularProgress size={28} />
         </Box>
+      )}
+      {emergencyActive && (
+        <Paper
+          elevation={2}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+            borderRadius: 1.5,
+            bgcolor: '#FDECEA',
+            maxWidth: '80%',
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#B71C1C', fontWeight: 700 }}>
+            {emergencyAwaitingPick
+              ? `비상모드: ${emergencyLabel} — 지도를 클릭해 발생 위치를 지정하세요`
+              : `비상모드: ${emergencyLabel} · 반경 3/7/11km 표시 중`}
+          </Typography>
+          {!emergencyAwaitingPick && (
+            <Button size="small" color="error" variant="outlined" onClick={() => exitEmergencyMode()}>
+              종료
+            </Button>
+          )}
+        </Paper>
       )}
       <MapControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} onLocate={handleLocate} />
       <MapLegend />

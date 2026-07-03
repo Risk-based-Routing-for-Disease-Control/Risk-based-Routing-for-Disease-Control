@@ -5,6 +5,7 @@ import type { DispatchResult, DispatchTeam } from '../types/dispatch';
 import { cancelDispatchStop, completeDispatchStop, fetchDispatchRunTeams, routeAssignment } from '../api/dispatch';
 import { useFacilitiesStore } from './useFacilitiesStore';
 import { useFarmStore } from './useFarmStore';
+import { useEmergencyModeStore } from './useEmergencyModeStore';
 import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
@@ -98,8 +99,9 @@ export const useDispatchStore = create<DispatchState>()(
         try {
           const facilities = useFacilitiesStore.getState().facilities;
           const facilitiesMap = new Map(facilities.map((f) => [f.id, f]));
+          const emergencyMode = useEmergencyModeStore.getState().isActive;
           const { result, dispatchRunId } = await routeAssignment(
-            { teamCount, farmIds: selectedFarmIds, farms },
+            { teamCount, farmIds: selectedFarmIds, farms, emergencyMode },
             facilitiesMap,
           );
           set({ result, dispatchRunId, isDispatching: false });

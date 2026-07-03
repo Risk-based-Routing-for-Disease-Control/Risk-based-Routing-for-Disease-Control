@@ -575,3 +575,70 @@ async def solve_dispatch(farms: list[DispatchFarm], options: DispatchOptions) ->
         "teamCount": options.team_count,
         "totalDurationMinutes": total_duration,
     }
+
+
+async def solve_emergency_dispatch(farms: list[DispatchFarm], options: DispatchOptions) -> dict[str, Any]:
+    """비상모드 배차: 팀당 농장 1곳만 방문 후 소독 경유, 즉시 복귀한다.
+
+    일반 solve_dispatch()의 ALNS 다중 농장 최적화 대신, 팀 수보다 농장이 많으면
+    위험도 높은 농장부터 하나씩 배정하고 나머지는 unassignedFarms로 뺀다.
+    """
+    if not farms:
+        return {
+            "teams": [],
+            "unassignedFarms": [],
+            "selectedFarmCount": 0,
+            "teamCount": options.team_count,
+            "totalDurationMinutes": 0,
+        }
+    if options.team_count < 1:
+        raise ValueError("team_count must be at least 1")
+
+    ctx = await _build_context(farms, options)
+    ordered_farms = sorted(farms, key=lambda f: f.risk_score, reverse=True)
+    depot_response = {"name": options.depot_name, "lat": options.depot_lat, "lng": options.depot_lng}
+
+    teams: list[dict[str, Any]] = []
+    assigned_farm_ids: set[str] = set()
+    total_duration = 0
+
+    for vehicle_id in range(options.team_count):
+        farm = ordered_farms[vehicle_id] if vehicle_id < len(ordered_farms) else None
+        route = [DEPOT_ID, DEPOT_ID]
+        stops: list[dict[str, Any]] = []
+        if farm:
+            route = [DEPOT_ID, farm.id, DEPOT_ID]
+            disinfection_hub = _best_disinfection_for_leg(farm.id, DEPOT_ID, ctx)
+            assigned_farm_ids.add(farm.id)
+            stops.append(
+                {
+                    "farm": farm_to_response(farm),
+                    "disinfectionHub": _hub_response(disinfection_hub),
+                    "order": 1,
+                    "status": "plain",
+                }
+            )
+        duration = route_minutes(route, ctx, options) if farm else 0
+        total_duration += duration
+        teams.append(
+            {
+                "id": f"team-{vehicle_id + 1}",
+                "label": f"팀 {vehicle_id + 1}",
+                "color": TEAM_COLORS[vehicle_id % len(TEAM_COLORS)],
+                "depot": depot_response,
+                "stops": stops,
+                "totalDurationMinutes": duration,
+            }
+        )
+
+    unassigned = [farm_to_response(f) for f in farms if f.id not in assigned_farm_ids]
+    if unassigned and not options.allow_unassigned:
+        raise RuntimeError("팀 수보다 비상 대상 농장이 많아 배차 제약조건을 만족할 수 없습니다.")
+
+    return {
+        "teams": teams,
+        "unassignedFarms": unassigned,
+        "selectedFarmCount": len(farms),
+        "teamCount": options.team_count,
+        "totalDurationMinutes": total_duration,
+    }

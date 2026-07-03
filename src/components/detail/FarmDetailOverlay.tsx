@@ -1,6 +1,7 @@
-import { Box, Chip, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, IconButton, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useFarmStore } from '../../store/useFarmStore';
+import { useEmergencyModeStore } from '../../store/useEmergencyModeStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL } from '../../constants/risk';
 import { getLivestockDisplayLabel } from '../../utils/livestock';
 import { LivestockIcon } from '../common/LivestockIcon';
@@ -48,9 +49,23 @@ export function FarmDetailOverlay() {
             sx={{ bgcolor: RISK_LEVEL_COLOR[farm.riskLevel], color: '#fff', fontWeight: 700 }}
           />
         </Stack>
-        <IconButton size="small" onClick={clearSelection} aria-label="농장 상세 닫기">
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            onClick={() =>
+              useEmergencyModeStore
+                .getState()
+                .enterWithCenter({ lat: farm.lat, lng: farm.lng }, `${farm.name} · 수동 지정`)
+            }
+          >
+            비상모드 진입
+          </Button>
+          <IconButton size="small" onClick={clearSelection} aria-label="농장 상세 닫기">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Stack>
       </Stack>
 
       <Box

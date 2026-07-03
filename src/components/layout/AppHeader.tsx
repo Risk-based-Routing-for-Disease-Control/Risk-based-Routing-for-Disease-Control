@@ -20,6 +20,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import { useOutbreakAlertStore } from '../../store/useOutbreakAlertStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useFarmStore } from '../../store/useFarmStore';
+import { useEmergencyModeStore } from '../../store/useEmergencyModeStore';
 import { useInterval } from '../../hooks/useInterval';
 
 const POLL_INTERVAL_MS = 60000; // 1분 — 배차 상태 폴링(8초)보다 여유 있게
@@ -108,6 +110,36 @@ export function AppHeader() {
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                           {`확진일 ${c.confirmedAt ?? '-'}`}
                         </Typography>
+                        <Tooltip title={c.isTest ? '테스트 항목은 비상모드로 진입할 수 없습니다' : ''}>
+                          <span>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              fullWidth
+                              disabled={c.isTest}
+                              sx={{ mt: 0.75 }}
+                              onClick={() => {
+                                const farms = useFarmStore.getState().farms;
+                                const byId = farms.find((f) => c.farmId && f.id === c.farmId);
+                                const nameMatches = farms.filter((f) => f.name === c.farmName);
+                                const resolved = byId ?? (nameMatches.length === 1 ? nameMatches[0] : undefined);
+                                const label = `${c.farmName ?? '농장명 미상'} · ${c.disease ?? ''}`;
+                                if (resolved) {
+                                  useEmergencyModeStore
+                                    .getState()
+                                    .enterWithCenter({ lat: resolved.lat, lng: resolved.lng }, label);
+                                } else {
+                                  useEmergencyModeStore.getState().enterAwaitingPick(label);
+                                }
+                                setAnchorEl(null);
+                                navigate('/map');
+                              }}
+                            >
+                              비상모드 진입
+                            </Button>
+                          </span>
+                        </Tooltip>
                       </Box>
                     ))}
                   </Stack>

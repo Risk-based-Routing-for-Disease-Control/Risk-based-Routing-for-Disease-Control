@@ -9,7 +9,12 @@ from pydantic import BaseModel, Field
 from services.databricks_client import get_farms_from_db
 from services.db import get_cursor
 from services.disinfection_facilities import load_disinfection_facilities
-from services.dispatch_optimizer import DispatchOptions, farm_from_dict, solve_dispatch
+from services.dispatch_optimizer import (
+    DispatchOptions,
+    farm_from_dict,
+    solve_dispatch,
+    solve_emergency_dispatch,
+)
 
 router = APIRouter(tags=["dispatch"])
 
@@ -81,6 +86,7 @@ class RouteAssignmentRequest(BaseModel):
     maxRouteMinutes: int = 480
     disinfectServiceMinutes: int = 20
     allowUnassigned: bool = True
+    emergencyMode: bool = False
 
 
 def _determine_status(teams: list, unassigned: list) -> str:
@@ -161,8 +167,9 @@ async def route_assignment(request: RouteAssignmentRequest):
         depot_lat=request.depotLat,
         depot_lng=request.depotLng,
     )
+    solver = solve_emergency_dispatch if request.emergencyMode else solve_dispatch
     try:
-        result = await solve_dispatch(selected, options)
+        result = await solver(selected, options)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RuntimeError as exc:

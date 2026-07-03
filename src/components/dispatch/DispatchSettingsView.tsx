@@ -23,6 +23,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useFarmStore } from '../../store/useFarmStore';
 import { useDispatchStore } from '../../store/useDispatchStore';
+import { useEmergencyModeStore } from '../../store/useEmergencyModeStore';
 import { RISK_LEVEL_COLOR, RISK_LEVEL_LABEL, RISK_LEVELS } from '../../constants/risk';
 import type { RiskLevel } from '../../types/farm';
 import { getLivestockDisplayLabel } from '../../utils/livestock';
@@ -50,6 +51,8 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
   const setSelectedFarmIds = useDispatchStore((s) => s.setSelectedFarmIds);
   const resetSelection = useDispatchStore((s) => s.resetSelection);
   const runDispatch = useDispatchStore((s) => s.runDispatch);
+  const emergencyActive = useEmergencyModeStore((s) => s.isActive);
+  const emergencyLabel = useEmergencyModeStore((s) => s.label);
 
   const [sortDesc, setSortDesc] = useState(true);
 
@@ -99,6 +102,21 @@ export function DispatchSettingsView({ variant = 'page', onDispatchComplete }: D
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
             경로 배치 설정
           </Typography>
+        )}
+
+        {emergencyActive && (
+          <Paper
+            sx={{
+              bgcolor: 'error.main',
+              color: '#fff',
+              borderRadius: 1.5,
+              p: 1.5,
+              mb: isPanel ? 2 : 3,
+              fontWeight: 700,
+            }}
+          >
+            {`🚨 비상 대응 모드 — ${emergencyLabel ?? ''} · 팀당 농장 1곳만 방문 후 소독 경유, 즉시 복귀합니다.`}
+          </Paper>
         )}
 
         <Paper variant="outlined" sx={{ borderRadius: 1.5, p: isPanel ? 2 : 2.5, mb: isPanel ? 2 : 3 }}>
