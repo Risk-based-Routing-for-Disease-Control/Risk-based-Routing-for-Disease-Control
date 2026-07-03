@@ -16,8 +16,10 @@ import {
 import ShieldIcon from '@mui/icons-material/Shield';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import PersonIcon from '@mui/icons-material/Person';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useNavigate } from 'react-router-dom';
 import { useOutbreakAlertStore } from '../../store/useOutbreakAlertStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useInterval } from '../../hooks/useInterval';
 
 const POLL_INTERVAL_MS = 60000; // 1분 — 배차 상태 폴링(8초)보다 여유 있게
@@ -28,11 +30,18 @@ function formatAlertDate(value: string | null) {
 }
 
 export function AppHeader() {
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
   const badgeCount = useOutbreakAlertStore((s) => s.badgeCount);
   const lastCheckedDate = useOutbreakAlertStore((s) => s.lastCheckedDate);
   const cases = useOutbreakAlertStore((s) => s.cases);
   const checkOutbreaks = useOutbreakAlertStore((s) => s.checkOutbreaks);
   const clearBadge = useOutbreakAlertStore((s) => s.clearBadge);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -119,13 +128,20 @@ export function AppHeader() {
             )}
           </Box>
         </Popover>
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', cursor: 'pointer', pl: 1 }}>
-          <Avatar sx={{ width: 28, height: 28, bgcolor: 'grey.200' }}>
-            <PersonIcon sx={{ color: 'grey.600', fontSize: 18 }} />
-          </Avatar>
-          <Typography variant="body2">관리자</Typography>
-          <ExpandMoreIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-        </Stack>
+        <Tooltip title="로그아웃">
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ alignItems: 'center', cursor: 'pointer', pl: 1 }}
+            onClick={handleLogout}
+          >
+            <Avatar sx={{ width: 28, height: 28, bgcolor: 'grey.200' }}>
+              <PersonIcon sx={{ color: 'grey.600', fontSize: 18 }} />
+            </Avatar>
+            <Typography variant="body2">관리자</Typography>
+            <LogoutIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+          </Stack>
+        </Tooltip>
       </Toolbar>
     </AppBar>
   );
