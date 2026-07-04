@@ -75,7 +75,7 @@ _DUMMY_XAI_FACTORS: list[list[dict[str, Any]]] = [
         {
             "id": "dummy-xai-002-humidity",
             "factorCode": "humidity",
-            "label": "습도 증가",
+            "label": "습도 감소",
             "icon": "/xai-icons/humidity.png",
             "weight": 0.04,
         },

@@ -35,7 +35,7 @@ const duckXaiFactors = [
   {
     id: 'mock-xai-humidity',
     factorCode: 'humidity',
-    label: '습도 증가',
+    label: '습도 감소',
     icon: '/xai-icons/humidity.png',
     weight: 0.28,
   },
