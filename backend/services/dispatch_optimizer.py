@@ -199,7 +199,8 @@ def _best_feasible_insert(
 ) -> tuple[int | None, int]:
     best_pos: int | None = None
     best_delta = math.inf
-    for pos in range(1, len(route)):
+    valid_positions = _get_valid_positions(route, candidate, ctx)
+    for pos in valid_positions:
         delta = _insertion_delta(route, candidate, pos, ctx, options)
         trial = route[:pos] + [candidate] + route[pos:]
         if delta < best_delta and route_minutes(trial, ctx, options) <= ctx.max_time:
@@ -318,6 +319,64 @@ def _roulette(weights: list[float]) -> int:
             return index
     return len(weights) - 1
 
+# ================================================================
+# Bucket 순서 제약
+# 저위험 → 중위험 → 고위험 순서로 방문 (교차오염 방지)
+# bucket 0: 저위험 (0.0 ~ 0.5)
+# bucket 1: 중위험 (0.5 ~ 0.7)
+# bucket 2: 고위험 (0.7 ~ 1.0)
+# ================================================================
+
+def _assign_bucket(risk_score: float) -> int:
+    if risk_score < 0.5:
+        return 0
+    elif risk_score < 0.7:
+        return 1
+    else:
+        return 2
+
+
+def _is_bucket_order_valid(route: list[str], ctx: AlnsContext) -> bool:
+    """구간 순서 위반 여부 확인 (저→중→고)"""
+    seq = [n for n in route if n in ctx.farm_map]
+    max_bucket = -1
+    for farm_id in seq:
+        b = _assign_bucket(ctx.farm_map[farm_id].risk_score)
+        if b < max_bucket:
+            return False
+        max_bucket = max(max_bucket, b)
+    return True
+
+
+def _get_valid_positions(
+    route: list[str],
+    candidate: str,
+    ctx: AlnsContext,
+) -> list[int]:
+    """bucket 순서를 위반하지 않는 삽입 위치 목록 반환"""
+    valid = []
+    for pos in range(1, len(route)):
+        trial = route[:pos] + [candidate] + route[pos:]
+        if _is_bucket_order_valid(trial, ctx):
+            valid.append(pos)
+    return valid
+
+
+def _minor_penalty(route: list[str], ctx: AlnsContext) -> float:
+    """같은 구간 내부 역행 페널티 (소프트 제약, MINOR_PENALTY_WEIGHT=30)"""
+    MINOR_PENALTY_WEIGHT = 30
+    penalty = 0.0
+    seq = [n for n in route if n in ctx.farm_map]
+    for i in range(len(seq) - 1):
+        a, b = seq[i], seq[i + 1]
+        ba = _assign_bucket(ctx.farm_map[a].risk_score)
+        bb = _assign_bucket(ctx.farm_map[b].risk_score)
+        if ba == bb:
+            ra = ctx.farm_map[a].risk_score
+            rb = ctx.farm_map[b].risk_score
+            if rb < ra:
+                penalty += (ra - rb) * MINOR_PENALTY_WEIGHT
+    return penalty
 
 def alns_improve(
     route: list[str],
