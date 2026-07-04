@@ -6,6 +6,7 @@ import { cancelDispatchStop, completeDispatchStop, fetchDispatchRunTeams, routeA
 import { useFacilitiesStore } from './useFacilitiesStore';
 import { useFarmStore } from './useFarmStore';
 import { useEmergencyModeStore } from './useEmergencyModeStore';
+import { DEFAULT_MAP_CENTER } from '../constants/map';
 import { nowTimeLabel } from '../utils/time';
 
 function buildLiveTeams(teams: DispatchTeam[]): DispatchTeam[] {
@@ -105,6 +106,8 @@ export const useDispatchStore = create<DispatchState>()(
               teamCount,
               farmIds: selectedFarmIds,
               farms,
+              depotLat: DEFAULT_MAP_CENTER.lat,
+              depotLng: DEFAULT_MAP_CENTER.lng,
               emergencyMode: emergencyState.isActive,
               emergencyCenterLat: emergencyState.center?.lat,
               emergencyCenterLng: emergencyState.center?.lng,

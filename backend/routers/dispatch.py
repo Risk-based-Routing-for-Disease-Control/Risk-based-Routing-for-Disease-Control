@@ -83,8 +83,8 @@ class RouteAssignmentRequest(BaseModel):
     farmIds: list[str]
     farms: list[dict[str, Any]] | None = None  # DB 전환 전 프론트 farm 객체 직접 수신용
     depotName: str = "공통 방역 출발지"
-    depotLat: float = 37.1995
-    depotLng: float = 126.8310
+    depotLat: float = 37.005175
+    depotLng: float = 127.2818444
     maxRouteMinutes: int = 480
     disinfectServiceMinutes: int = 20
     allowUnassigned: bool = True
