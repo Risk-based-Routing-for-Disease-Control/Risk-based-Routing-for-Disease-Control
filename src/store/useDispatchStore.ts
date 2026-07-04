@@ -108,6 +108,7 @@ export const useDispatchStore = create<DispatchState>()(
               emergencyMode: emergencyState.isActive,
               emergencyCenterLat: emergencyState.center?.lat,
               emergencyCenterLng: emergencyState.center?.lng,
+              outbreakFarmId: emergencyState.outbreakFarmId,
             },
             facilitiesMap,
           );

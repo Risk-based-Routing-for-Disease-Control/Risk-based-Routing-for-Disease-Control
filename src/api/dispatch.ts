@@ -69,6 +69,7 @@ export interface RouteAssignmentRequest {
   emergencyMode?: boolean;
   emergencyCenterLat?: number;
   emergencyCenterLng?: number;
+  outbreakFarmId?: string | null;
 }
 
 function mapToDispatchResult(
@@ -163,6 +164,7 @@ export async function routeAssignment(
       emergencyMode: request.emergencyMode,
       emergencyCenterLat: request.emergencyCenterLat,
       emergencyCenterLng: request.emergencyCenterLng,
+      outbreakFarmId: request.outbreakFarmId,
     }),
   });
 

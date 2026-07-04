@@ -74,6 +74,7 @@ class DispatchFarm:
     address: str = ""
     xai_factors: list[dict[str, Any]] | None = None
     last_updated_at: str = ""
+    suspected_farm: bool = False
 
 
 @dataclass(frozen=True)
@@ -106,6 +107,7 @@ def farm_from_dict(data: dict[str, Any]) -> DispatchFarm:
         address=str(data.get("address", "")),
         xai_factors=list(data.get("xaiFactors", data.get("xai_factors", [])) or []),
         last_updated_at=str(data.get("lastUpdatedAt", data.get("last_updated_at", ""))),
+        suspected_farm=bool(data.get("suspectedFarm", data.get("suspected_farm", False))),
     )
 
 
@@ -125,6 +127,7 @@ def farm_to_response(farm: DispatchFarm) -> dict[str, Any]:
         "address": farm.address,
         "xaiFactors": farm.xai_factors or [],
         "lastUpdatedAt": farm.last_updated_at,
+        "suspectedFarm": farm.suspected_farm,
     }
 
 
@@ -714,6 +717,129 @@ def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return r * 2 * math.asin(math.sqrt(a))
 
 
+_ZONE_3KM = "3km"
+_ZONE_10KM = "10km"
+_ZONE_OUT = "outside"
+
+
+def _classify_emergency_zone(farm: DispatchFarm, center_lat: float, center_lng: float) -> str:
+    distance = _haversine_km(farm.lat, farm.lng, center_lat, center_lng)
+    if distance <= 3.0:
+        return _ZONE_3KM
+    if distance <= 10.0:
+        return _ZONE_10KM
+    return _ZONE_OUT
+
+
+def _emergency_priority_score(farm: DispatchFarm, zone: str) -> float:
+    zone_score = {_ZONE_3KM: 300.0, _ZONE_10KM: 200.0, _ZONE_OUT: 100.0}[zone]
+    duck_bonus = 50.0 if "오리" in farm.livestock_type else 0.0
+    return zone_score + duck_bonus + farm.risk_score * 10.0
+
+
+def _emergency_greedy_route(
+    farm_ids: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+    priority_scores: dict[str, float],
+) -> list[str]:
+    unvisited = list(farm_ids)
+    route = [DEPOT_ID, DEPOT_ID]
+    while unvisited:
+        best_farm: str | None = None
+        best_score = -1.0
+        best_pos: int | None = None
+        for farm_id in unvisited:
+            pos, delta = _best_feasible_insert(route, farm_id, ctx, options)
+            if pos is None:
+                continue
+            score = priority_scores[farm_id] / max(delta, 1)
+            if score > best_score:
+                best_farm = farm_id
+                best_score = score
+                best_pos = pos
+        if best_farm is None or best_pos is None:
+            break
+        route = route[:best_pos] + [best_farm] + route[best_pos:]
+        unvisited.remove(best_farm)
+    return route
+
+
+def _emergency_alns_improve(
+    route: list[str],
+    all_farm_ids: list[str],
+    ctx: AlnsContext,
+    options: DispatchOptions,
+    priority_scores: dict[str, float],
+    max_iter: int = 500,
+    destroy_count: int = 2,
+) -> list[str]:
+    def route_priority(candidate_route: list[str]) -> float:
+        return sum(priority_scores[node_id] for node_id in candidate_route if node_id in ctx.farm_map)
+
+    destroy_weights = [1.0, 1.0, 1.0]
+    repair_weights = [1.0, 1.0]
+    destroy_counts = [0, 0, 0]
+    repair_counts = [0, 0]
+    best_route = route[:]
+    best_score = route_priority(best_route)
+    no_improvement = 0
+
+    for _ in range(max_iter):
+        if no_improvement >= 50:
+            break
+        farms_in = [node_id for node_id in best_route if node_id in ctx.farm_map]
+        if not farms_in:
+            break
+
+        destroy_index = _roulette(destroy_weights)
+        repair_index = _roulette(repair_weights)
+        actual_destroy = min(destroy_count, len(farms_in))
+
+        if destroy_index == 0:
+            destroyed_route, _ = _destroy_by_risk(best_route, actual_destroy, ctx)
+        elif destroy_index == 1:
+            destroyed_route, _ = _destroy_by_cost(best_route, actual_destroy, ctx, options)
+        else:
+            destroyed_route, _ = _destroy_random(best_route, actual_destroy, ctx)
+
+        visited = {node_id for node_id in destroyed_route if node_id in ctx.farm_map}
+        candidates = [farm_id for farm_id in all_farm_ids if farm_id not in visited]
+        ordered = sorted(
+            candidates,
+            key=lambda farm_id: (
+                priority_scores[farm_id] / max(_service_minutes(ctx.farm_map[farm_id], options), 1)
+                if repair_index == 0
+                else priority_scores[farm_id]
+            ),
+            reverse=True,
+        )
+
+        repaired_route = _insert_candidates(destroyed_route, ordered, ctx, options)
+        trial_score = route_priority(repaired_route)
+        score = 0
+        if trial_score > best_score:
+            best_route = repaired_route[:]
+            best_score = trial_score
+            no_improvement = 0
+            score = 3
+        else:
+            no_improvement += 1
+
+        destroy_counts[destroy_index] += 1
+        repair_counts[repair_index] += 1
+        destroy_weights[destroy_index] = max(
+            0.01,
+            destroy_weights[destroy_index] * 0.9 + (score / max(destroy_counts[destroy_index], 1)) * 0.1,
+        )
+        repair_weights[repair_index] = max(
+            0.01,
+            repair_weights[repair_index] * 0.9 + (score / max(repair_counts[repair_index], 1)) * 0.1,
+        )
+
+    return best_route
+
+
 def _merge_dispatch_results(parts: list[dict[str, Any]], total_team_count: int) -> dict[str, Any]:
     all_teams: list[dict[str, Any]] = []
     all_unassigned: list[dict[str, Any]] = []
@@ -734,6 +860,151 @@ def _merge_dispatch_results(parts: list[dict[str, Any]], total_team_count: int) 
         "unassignedFarms": all_unassigned,
         "selectedFarmCount": total_selected,
         "teamCount": total_team_count,
+        "totalDurationMinutes": total_duration,
+    }
+
+
+async def solve_emergency_dispatch_for_outbreak(
+    farms: list[DispatchFarm],
+    options: DispatchOptions,
+    outbreak_farm_id: str,
+    outbreak_center: tuple[float, float] | None = None,
+) -> dict[str, Any]:
+    """비상모드: 발생 농장 기준 방역대와 의심농장 1:1 배정을 함께 적용한다.
+
+    suspectedFarm=True 농장은 팀을 먼저 확보해 팀당 1곳만 방문한다.
+    남은 팀은 3km/10km/외부, 오리 여부, 위험도 점수로 만든 우선순위로
+    일반 농장을 다중 방문한다.
+    """
+    if not farms:
+        return {
+            "teams": [],
+            "unassignedFarms": [],
+            "selectedFarmCount": 0,
+            "teamCount": options.team_count,
+            "totalDurationMinutes": 0,
+        }
+    if options.team_count < 1:
+        raise ValueError("team_count must be at least 1")
+
+    outbreak_farm = next((farm for farm in farms if farm.id == outbreak_farm_id), None)
+    if outbreak_farm is not None:
+        center_lat, center_lng = outbreak_farm.lat, outbreak_farm.lng
+    elif outbreak_center is not None:
+        center_lat, center_lng = outbreak_center
+    else:
+        raise ValueError(f"발생 농장 ID '{outbreak_farm_id}'의 좌표를 찾을 수 없습니다.")
+
+    random.seed(RANDOM_SEED)
+    ctx = await _build_context(farms, options)
+    depot_response = {"name": options.depot_name, "lat": options.depot_lat, "lng": options.depot_lng}
+    zones = {farm.id: _classify_emergency_zone(farm, center_lat, center_lng) for farm in farms}
+    priority_scores = {farm.id: _emergency_priority_score(farm, zones[farm.id]) for farm in farms}
+
+    suspected = sorted(
+        [farm for farm in farms if farm.suspected_farm],
+        key=lambda farm: priority_scores[farm.id],
+        reverse=True,
+    )
+    normal = [farm for farm in farms if not farm.suspected_farm]
+
+    teams: list[dict[str, Any]] = []
+    assigned_farm_ids: set[str] = set()
+    total_duration = 0
+
+    suspected_team_count = min(len(suspected), options.team_count)
+    normal_team_count = options.team_count - suspected_team_count
+
+    for vehicle_id in range(suspected_team_count):
+        farm = suspected[vehicle_id]
+        route = [DEPOT_ID, farm.id, DEPOT_ID]
+        disinfection_hub = _best_disinfection_for_leg(farm.id, DEPOT_ID, ctx)
+        duration = route_minutes(route, ctx, options)
+        total_duration += duration
+        assigned_farm_ids.add(farm.id)
+        teams.append(
+            {
+                "id": f"team-{vehicle_id + 1}",
+                "label": f"팀 {vehicle_id + 1}",
+                "color": TEAM_COLORS[vehicle_id % len(TEAM_COLORS)],
+                "depot": depot_response,
+                "stops": [
+                    {
+                        "farm": farm_to_response(farm),
+                        "disinfectionHub": _hub_response(disinfection_hub),
+                        "order": 1,
+                        "status": "emergency",
+                    }
+                ],
+                "totalDurationMinutes": duration,
+            }
+        )
+
+    if normal and normal_team_count > 0:
+        cluster_count = max(1, min(normal_team_count, len(normal)))
+        clustering_input = [
+            {
+                "id": farm.id,
+                "lat": farm.lat,
+                "lon": farm.lng,
+                "risk": priority_scores[farm.id] / 400.0,
+                "service_min": _service_minutes(farm, options),
+            }
+            for farm in normal
+        ]
+        with redirect_stdout(io.StringIO()):
+            clusters, _ = risk_clustering_v2(clustering_input, cluster_count)
+
+        buckets: list[list[str]] = [[] for _ in range(normal_team_count)]
+        for index in range(cluster_count):
+            buckets[index] = [item["id"] for item in clusters[index]]
+
+        for index in range(normal_team_count):
+            vehicle_id = suspected_team_count + index
+            bucket_ids = buckets[index]
+            route = [DEPOT_ID, DEPOT_ID]
+            if bucket_ids:
+                route = _emergency_greedy_route(bucket_ids, ctx, options, priority_scores)
+                route = _emergency_alns_improve(route, bucket_ids, ctx, options, priority_scores)
+
+            stops: list[dict[str, Any]] = []
+            visited = [node_id for node_id in route if node_id in ctx.farm_map]
+            for order, farm_id in enumerate(visited, start=1):
+                farm = ctx.farm_map[farm_id]
+                next_node_id = route[route.index(farm_id) + 1]
+                disinfection_hub = _best_disinfection_for_leg(farm_id, next_node_id, ctx)
+                assigned_farm_ids.add(farm_id)
+                stops.append(
+                    {
+                        "farm": farm_to_response(farm),
+                        "disinfectionHub": _hub_response(disinfection_hub),
+                        "order": order,
+                        "status": "plain",
+                    }
+                )
+
+            duration = route_minutes(route, ctx, options) if bucket_ids else 0
+            total_duration += duration
+            teams.append(
+                {
+                    "id": f"team-{vehicle_id + 1}",
+                    "label": f"팀 {vehicle_id + 1}",
+                    "color": TEAM_COLORS[vehicle_id % len(TEAM_COLORS)],
+                    "depot": depot_response,
+                    "stops": stops,
+                    "totalDurationMinutes": duration,
+                }
+            )
+
+    unassigned = [farm_to_response(farm) for farm in farms if farm.id not in assigned_farm_ids]
+    if unassigned and not options.allow_unassigned:
+        raise RuntimeError("비상모드 배차 제약조건을 만족하는 경로를 찾지 못했습니다.")
+
+    return {
+        "teams": teams,
+        "unassignedFarms": unassigned,
+        "selectedFarmCount": len(farms),
+        "teamCount": options.team_count,
         "totalDurationMinutes": total_duration,
     }
 

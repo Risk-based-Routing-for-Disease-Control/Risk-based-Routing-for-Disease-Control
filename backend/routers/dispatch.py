@@ -14,6 +14,7 @@ from services.dispatch_optimizer import (
     farm_from_dict,
     solve_dispatch,
     solve_emergency_dispatch,
+    solve_emergency_dispatch_for_outbreak,
     solve_emergency_dispatch_zoned,
 )
 
@@ -90,6 +91,7 @@ class RouteAssignmentRequest(BaseModel):
     emergencyMode: bool = False
     emergencyCenterLat: float | None = None
     emergencyCenterLng: float | None = None
+    outbreakFarmId: str | None = None
 
 
 def _determine_status(teams: list, unassigned: list) -> str:
@@ -171,7 +173,27 @@ async def route_assignment(request: RouteAssignmentRequest):
         depot_lng=request.depotLng,
     )
     try:
-        if request.emergencyMode and request.emergencyCenterLat is not None and request.emergencyCenterLng is not None:
+        if request.emergencyMode and request.outbreakFarmId:
+            outbreak_source = next(
+                (farm for farm in source_farms if str(farm.get("id")) == request.outbreakFarmId),
+                None,
+            )
+            outbreak_center = (
+                (float(outbreak_source["lat"]), float(outbreak_source["lng"]))
+                if outbreak_source is not None
+                else (
+                    (request.emergencyCenterLat, request.emergencyCenterLng)
+                    if request.emergencyCenterLat is not None and request.emergencyCenterLng is not None
+                    else None
+                )
+            )
+            result = await solve_emergency_dispatch_for_outbreak(
+                selected,
+                options,
+                request.outbreakFarmId,
+                outbreak_center,
+            )
+        elif request.emergencyMode and request.emergencyCenterLat is not None and request.emergencyCenterLng is not None:
             result = await solve_emergency_dispatch_zoned(
                 selected, options, request.emergencyCenterLat, request.emergencyCenterLng,
             )

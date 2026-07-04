@@ -128,7 +128,7 @@ export function AppHeader() {
                                 if (resolved) {
                                   useEmergencyModeStore
                                     .getState()
-                                    .enterWithCenter({ lat: resolved.lat, lng: resolved.lng }, label);
+                                    .enterWithCenter({ lat: resolved.lat, lng: resolved.lng }, label, c.farmId);
                                 } else {
                                   useEmergencyModeStore.getState().enterAwaitingPick(label);
                                 }
