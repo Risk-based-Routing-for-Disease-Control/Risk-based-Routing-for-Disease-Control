@@ -18,6 +18,7 @@ interface ApiFarm {
   estimatedDurationMinutes?: number;
   address?: string;
   xaiFactors?: XaiFactor[];
+  suspectedFarm?: boolean;
 }
 
 function toRiskLevel(raw: string): RiskLevel {
@@ -44,6 +45,7 @@ function toFarm(api: ApiFarm): Farm {
     address: api.address ?? '',
     xaiFactors: api.xaiFactors ?? [],
     lastUpdatedAt: api.riskDate ?? '',
+    suspectedFarm: api.suspectedFarm ?? false,
   };
 }
 
@@ -64,4 +66,13 @@ export async function fetchFarms(): Promise<FetchFarmsResult> {
   if (!response.ok) throw new Error(`farms fetch failed: ${response.status}`);
   const data = (await response.json()) as FarmsListResponse;
   return { farms: data.farms.map(toFarm), source: data.source, error: data.error };
+}
+
+export async function updateSuspectedFarm(farmId: string, suspected: boolean): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/farms/${farmId}/suspected`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ suspected }),
+  });
+  if (!response.ok) throw new Error(`suspected farm update failed: ${response.status}`);
 }

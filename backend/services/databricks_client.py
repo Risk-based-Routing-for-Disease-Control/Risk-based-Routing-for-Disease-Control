@@ -266,6 +266,7 @@ def _query_farms_from_postgres() -> list[dict[str, Any]]:
                 f.livestock_count             AS "livestockCount",
                 f.livestock_unit              AS "livestockUnit",
                 f.estimated_duration_minutes  AS "estimatedDurationMinutes",
+                f.suspected_farm              AS "suspectedFarm",
                 frs.risk_score_id AS "riskScoreId",
                 frs.risk_score   AS "riskScore",
                 frs.risk_level   AS "riskLevel",

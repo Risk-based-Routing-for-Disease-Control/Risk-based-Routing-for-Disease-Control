@@ -13,6 +13,8 @@ export function FarmDetailOverlay() {
   const farms = useFarmStore((s) => s.farms);
   const selectedFarmId = useFarmStore((s) => s.selectedFarmId);
   const clearSelection = useFarmStore((s) => s.clearSelection);
+  const toggleSuspected = useFarmStore((s) => s.toggleSuspected);
+  const emergencyActive = useEmergencyModeStore((s) => s.isActive);
   const farm = farms.find((item) => item.id === selectedFarmId);
   const visibleXaiFactors = farm?.xaiFactors.slice(0, MAX_VISIBLE_XAI_FACTORS) ?? [];
   const hiddenXaiFactorCount = Math.max(0, (farm?.xaiFactors.length ?? 0) - MAX_VISIBLE_XAI_FACTORS);
@@ -62,6 +64,16 @@ export function FarmDetailOverlay() {
           >
             비상모드 진입
           </Button>
+          {emergencyActive && (
+            <Button
+              size="small"
+              variant={farm.suspectedFarm ? 'contained' : 'outlined'}
+              color="warning"
+              onClick={() => void toggleSuspected(farm.id, !farm.suspectedFarm)}
+            >
+              {farm.suspectedFarm ? '의심 농장 해제' : '의심 농장 지정'}
+            </Button>
+          )}
           <IconButton size="small" onClick={clearSelection} aria-label="농장 상세 닫기">
             <CloseIcon fontSize="small" />
           </IconButton>

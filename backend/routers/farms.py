@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from services.databricks_client import get_farms_from_db, get_farms_with_status
+from services.db import get_cursor
 
 router = APIRouter(tags=["farms"])
 
@@ -134,3 +136,21 @@ def get_farm(farm_id: str):
         "xaiFactors": base.get("xaiFactors", []),
         **detail,
     }
+
+
+class SuspectedFarmRequest(BaseModel):
+    suspected: bool
+
+
+@router.patch("/farms/{farm_id}/suspected")
+def set_suspected_farm(farm_id: str, request: SuspectedFarmRequest):
+    """비상모드 중 담당자가 지정/해제하는 의심 농장 플래그를 반영한다."""
+    with get_cursor() as cur:
+        cur.execute(
+            "UPDATE farms SET suspected_farm = %s WHERE farm_id = %s RETURNING farm_id, suspected_farm",
+            (request.suspected, farm_id),
+        )
+        row = cur.fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail=f"농장을 찾을 수 없습니다: {farm_id}")
+    return {"farmId": row["farm_id"], "suspectedFarm": row["suspected_farm"]}

@@ -23,4 +23,5 @@ export interface Farm {
   address: string;
   xaiFactors: XaiFactor[];
   lastUpdatedAt: string;
+  suspectedFarm?: boolean;
 }

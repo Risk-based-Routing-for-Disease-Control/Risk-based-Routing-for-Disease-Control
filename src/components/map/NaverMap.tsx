@@ -13,11 +13,10 @@ import { createTooltipContent } from '../../utils/mapTooltip';
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/map';
 
 const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
-const EMERGENCY_RADII_METERS = [3000, 7000, 11000];
+const EMERGENCY_RADII_METERS = [3000, 10000];
 const EMERGENCY_RADIUS_STYLES = [
   { strokeColor: '#E53935', fillColor: '#E53935', fillOpacity: 0.08 },
   { strokeColor: '#FB8C00', fillColor: '#FB8C00', fillOpacity: 0.05 },
-  { strokeColor: '#FDD835', fillColor: '#FDD835', fillOpacity: 0.03 },
 ];
 
 function createFacilityMarkerIcon() {
@@ -261,7 +260,7 @@ export function NaverMap() {
           <Typography variant="body2" sx={{ color: '#B71C1C', fontWeight: 700 }}>
             {emergencyAwaitingPick
               ? `비상모드: ${emergencyLabel} — 지도를 클릭해 발생 위치를 지정하세요`
-              : `비상모드: ${emergencyLabel} · 반경 3/7/11km 표시 중`}
+              : `비상모드: ${emergencyLabel} · 반경 3/10km 표시 중`}
           </Typography>
           {!emergencyAwaitingPick && (
             <Button size="small" color="error" variant="outlined" onClick={() => exitEmergencyMode()}>

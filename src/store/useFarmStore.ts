@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Farm } from '../types/farm';
 import { mockFarms } from '../data/mockFarms';
 import { normalizeFarmDuration } from '../utils/farmDuration';
-import { fetchFarms } from '../api/farms';
+import { fetchFarms, updateSuspectedFarm } from '../api/farms';
 
 const initialFarms = mockFarms.map(normalizeFarmDuration);
 
@@ -15,9 +15,10 @@ interface FarmStore {
   selectFarm: (id: string) => void;
   clearSelection: () => void;
   loadFarms: () => Promise<void>;
+  toggleSuspected: (farmId: string, suspected: boolean) => Promise<void>;
 }
 
-export const useFarmStore = create<FarmStore>((set) => ({
+export const useFarmStore = create<FarmStore>((set, get) => ({
   farms: initialFarms,
   selectedFarmId: initialFarms[0]?.id ?? null,
   isLoading: false,
@@ -42,6 +43,17 @@ export const useFarmStore = create<FarmStore>((set) => ({
       });
     } finally {
       set({ isLoading: false });
+    }
+  },
+  toggleSuspected: async (farmId, suspected) => {
+    set({
+      farms: get().farms.map((farm) => (farm.id === farmId ? { ...farm, suspectedFarm: suspected } : farm)),
+    });
+    try {
+      await updateSuspectedFarm(farmId, suspected);
+    } catch (error) {
+      // 서버 반영 실패해도 로컬 표시는 유지 — 다음 새로고침 시 서버 값으로 다시 맞춰짐
+      console.error('[useFarmStore] failed to update suspected farm', error);
     }
   },
 }));
