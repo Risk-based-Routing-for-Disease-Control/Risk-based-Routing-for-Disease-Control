@@ -52,6 +52,16 @@ export function FarmDetailOverlay() {
           />
         </Stack>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+          {emergencyActive && (
+            <Button
+              size="small"
+              variant={farm.suspectedFarm ? 'contained' : 'outlined'}
+              color="warning"
+              onClick={() => void toggleSuspected(farm.id, !farm.suspectedFarm)}
+            >
+              {farm.suspectedFarm ? '의심 농장 해제' : '의심 농장 지정'}
+            </Button>
+          )}
           <Button
             size="small"
             variant="outlined"
@@ -64,16 +74,6 @@ export function FarmDetailOverlay() {
           >
             비상모드 진입
           </Button>
-          {emergencyActive && (
-            <Button
-              size="small"
-              variant={farm.suspectedFarm ? 'contained' : 'outlined'}
-              color="warning"
-              onClick={() => void toggleSuspected(farm.id, !farm.suspectedFarm)}
-            >
-              {farm.suspectedFarm ? '의심 농장 해제' : '의심 농장 지정'}
-            </Button>
-          )}
           <IconButton size="small" onClick={clearSelection} aria-label="농장 상세 닫기">
             <CloseIcon fontSize="small" />
           </IconButton>
