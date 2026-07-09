@@ -39,6 +39,20 @@
 - `matched_STN`/`matched_STN_KO`/`matched_dist_km` 컬럼으로 어느 관측소가 매칭됐고 거리가 얼마인지 확인 가능 (전국 평균 16.9km, 최대 34.7km — 관측소가 100개뿐이라 일부는 멀리 매칭됨)
 - 조사날짜가 같아도 농장 위치(=최근접 관측소)가 다르면 서로 다른 날씨 시계열이 붙으므로, 매칭된 농장(15,743건) 중 날씨 데이터 자체가 없는 14건은 결과에서 빠지고, 나머지 15,729건 × 8행 = 125,832행이 된다. 농장당 1행으로 집계가 필요하면 별도 요약 단계가 필요하다.
 
+### extend_weather_for_routing.py -> weather_daily_raw.csv 보강
+`Final/전국_위험라우팅_타임라인.csv`(`scripts/build_risk_routing_timeline.py` + `scripts/merge_risk_routing_timeline.py` 산출물)의
+`reference_date` 전체(1,987일, 2003~2026)를 커버하도록 빠진 날짜 구간(42개, 1,566일)을 추가로 조회해
+기존 `weather_daily_raw.csv`(ML 농장현황 조사날짜 기준 30일 윈도우만 있던 것)에 합친다.
+
+### attach_routing_weather.py -> Final/전국_위험라우팅_타임라인_날씨.csv
+위험라우팅 타임라인은 이미 농장×날짜 long format이라, 농장 1건당 여러 날을 또 만들 필요 없이
+행마다 그 날짜(`reference_date`) 하나의 날씨만 최근접 관측소 기준으로 붙인다.
+
+- 좌표 3,520종에 대해 최근접 관측소까지 평균 16.1km (최대 33.3km)
+- 284,688행 중 843행(0.3%)은 관측소는 매칭됐지만 그 날짜 관측값 자체가 없어 날씨가 비어 있음
+- `fetch_stn_info.py`를 재실행해 새로 등장한 관측소(8개) 중 2개를 AWS 목록에서 보충 (6개는 ASOS/AWS
+  어디에도 메타데이터가 없어 제외 — 기존 176번과 같은 케이스)
+
 ## 환경 변수
 
 `.env`에 `KMA_API_KEY` 필요 (기상청 API Hub, ASOS 일자료 + 지점정보 두 API 모두 활용신청 필요).

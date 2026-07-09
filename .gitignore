@@ -230,3 +230,14 @@ __marimo__/
 
 # macOS
 .DS_Store
+
+# data 브랜치에서 제외 (다른 브랜치에서 관리 예정)
+/00_shared/
+/01_bronze/
+/02_silver/
+/03_gold/
+/04_transfer/
+
+# GitHub 100MB 파일당 제한 초과로 제외
+/Final/전국_위험라우팅_타임라인_날씨_전15일.csv
+/Final/전국_위험라우팅_타임라인_날씨.csv
