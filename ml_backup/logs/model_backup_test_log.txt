@@ -1,0 +1,28 @@
+
+Model Backup Test Result
+========================
+
+MODEL_BACKUP_PATH:
+dbfs:/FileStore/backups/hpai_ml_backup/model/signed_lightgbm_model
+
+INPUT_TABLE:
+dt4_team1_databricks.gold.ml_dataset_radius_all_20251216
+
+Feature Count:
+30
+
+Sample Shape:
+(5, 30)
+
+predict_proba:
+[[0.9654638 0.0345362]
+ [0.9574178 0.0425822]
+ [0.9574178 0.0425822]
+ [0.9574178 0.0425822]
+ [0.9574178 0.0425822]]
+
+riskScore:
+[0.0345362 0.0425822 0.0425822 0.0425822 0.0425822]
+
+Result:
+백업 모델 로드 및 샘플 predict_proba 테스트 성공
