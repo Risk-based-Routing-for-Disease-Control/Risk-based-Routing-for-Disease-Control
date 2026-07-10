@@ -79,12 +79,60 @@
             "type": "String"
         },
         "actiongroups_application_insights_smart_detection_externalid": {
-            "defaultValue": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/a000-aml-rg/providers/microsoft.insights/actiongroups/application insights smart detection",
+            "defaultValue": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/a000-aml-rg/providers/microsoft.insights/actiongroups/application insights smart detection')]",
             "type": "String"
         },
-        "workspaces_DefaultWorkspace_27db5ec6_d206_4028_b5e1_6004dca5eeef_SE_externalid": {
-            "defaultValue": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/DefaultResourceGroup-SE/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-27db5ec6-d206-4028-b5e1-6004dca5eeef-SE",
+        "workspaces_DefaultWorkspace_externalid": {
+            "defaultValue": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/DefaultResourceGroup-SE/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-', subscription().subscriptionId, '-SE')]",
             "type": "String"
+        },
+        "collectorWebhookServiceUri": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Logic App webhook URL. Supply securely at deployment time."
+            }
+        },
+        "office365ConnectionDisplayName": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Office 365 connection account display name or email."
+            }
+        },
+        "teamsConnectionDisplayName": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Microsoft Teams connection account display name or email."
+            }
+        },
+        "teamsGroupId": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Microsoft Teams team/group ID."
+            }
+        },
+        "teamsChannelId": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Microsoft Teams channel ID."
+            }
+        },
+        "databricksAuthorizationPrincipalId": {
+            "type": "secureString",
+            "metadata": {
+                "description": "Principal ID used by the Databricks workspace authorization."
+            }
+        },
+        "appServiceCustomDomainVerificationId": {
+            "type": "secureString",
+            "metadata": {
+                "description": "App Service custom-domain verification ID."
+            }
+        },
+        "postgresqlFirewallIpAddresses": {
+            "type": "secureObject",
+            "metadata": {
+                "description": "Object with client01 through client10 IP address values for PostgreSQL firewall rules."
+            }
         }
     },
     "variables": {},
@@ -112,7 +160,7 @@
                 "defaultCatalog": {
                     "initialType": "UnityCatalog"
                 },
-                "managedResourceGroupId": "[concat('/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/databricks-rg-', parameters('workspaces_dt4_team1_databricks_name'), '-osohwq5crjhlc')]",
+                "managedResourceGroupId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/databricks-rg-', parameters('workspaces_dt4_team1_databricks_name'), '-osohwq5crjhlc')]",
                 "parameters": {
                     "enableNoPublicIp": {
                         "type": "Bool",
@@ -137,7 +185,7 @@
                 },
                 "authorizations": [
                     {
-                        "principalId": "9a74af6f-d153-4348-988a-e2672920bee9",
+                        "principalId": "[parameters('databricksAuthorizationPrincipalId')]",
                         "roleDefinitionId": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
                     }
                 ],
@@ -228,7 +276,7 @@
                 "webhookReceivers": [
                     {
                         "name": "webhook",
-                        "serviceUri": "https://prod-16.northcentralus.logic.azure.com:443/workflows/80ee27e8a28346099f80f72c41483ae3/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=EAeqnGhDhfQQV-rYuHxzzu8AaXDrhYNMQA_hLqrG6ak",
+                        "serviceUri": "[parameters('collectorWebhookServiceUri')]",
                         "useCommonAlertSchema": true,
                         "useAadAuth": false
                     }
@@ -254,7 +302,7 @@
                 "Flow_Type": "Redfield",
                 "Request_Source": "IbizaWebAppExtensionCreate",
                 "RetentionInDays": 90,
-                "WorkspaceResourceId": "[parameters('workspaces_DefaultWorkspace_27db5ec6_d206_4028_b5e1_6004dca5eeef_SE_externalid')]",
+                "WorkspaceResourceId": "[parameters('workspaces_DefaultWorkspace_externalid')]",
                 "IngestionMode": "LogAnalytics",
                 "publicNetworkAccessForIngestion": "Enabled",
                 "publicNetworkAccessForQuery": "Enabled",
@@ -327,7 +375,7 @@
             "location": "northcentralus",
             "kind": "V1",
             "properties": {
-                "displayName": "starboy@officestu.seoultech.ac.kr",
+                "displayName": "[parameters('office365ConnectionDisplayName')]",
                 "statuses": [
                     {
                         "status": "Connected"
@@ -343,12 +391,12 @@
                     "description": "Microsoft Office 365는 강력한 보안, 안정성 및 사용자 생산성에 대한 조직의 요구를 충족할 수 있도록 설계된 클라우드 기반 서비스입니다.",
                     "iconUri": "[concat('https://static.powerapps.com/resource/ppcr/releases/v1.0.1817/1.0.1817.4781/', parameters('connections_office365_name'), '/icon.png')]",
                     "brandColor": "#0078D4",
-                    "id": "[concat('/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_office365_name'))]",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_office365_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_office365_name'), '/extensions/proxy/testconnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_office365_name'), '/extensions/proxy/testconnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
@@ -376,12 +424,12 @@
                     "displayName": "Outlook.com",
                     "description": "Outlook.com 커넥터를 사용하여 전자 메일, 일정 및 연락처를 관리할 수 있습니다. 전자 메일 보내기, 회의 예약, 연락처 추가 등과 같은 다양한 작업을 수행할 수 있습니다.",
                     "iconUri": "[concat('https://static.powerapps.com/resource/ppcr/releases/v1.0.1816/1.0.1816.4782/', parameters('connections_outlook_name'), '/icon.png')]",
-                    "id": "[concat('/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_outlook_name'))]",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_outlook_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_outlook_name'), '/extensions/proxy/testconnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_outlook_name'), '/extensions/proxy/testconnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
@@ -394,7 +442,7 @@
             "location": "northcentralus",
             "kind": "V1",
             "properties": {
-                "displayName": "4dt021@dataschool.msai.kr",
+                "displayName": "[parameters('teamsConnectionDisplayName')]",
                 "statuses": [
                     {
                         "status": "Connected"
@@ -409,12 +457,12 @@
                     "displayName": "Microsoft Teams",
                     "description": "Microsoft Teams를 사용하면 Microsoft 365를 통해 모든 콘텐츠, 도구 및 대화를 팀 작업 영역에 가져올 수 있습니다.",
                     "iconUri": "[concat('https://static.powerapps.com/resource/ppcr/releases/v1.0.1812/1.0.1812.4744/', parameters('connections_teams_name'), '/icon.png')]",
-                    "id": "[concat('/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_teams_name'))]",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/', parameters('connections_teams_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_teams_name'), '/extensions/proxy/beta/me/teamwork?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/', parameters('connections_teams_name'), '/extensions/proxy/beta/me/teamwork?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
@@ -7729,121 +7777,121 @@
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/ClientIPAddress_2026-6-29_9-33-23')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-01')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "175.193.34.4",
-                "endIpAddress": "175.193.34.4"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client01]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client01]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/ehjeon')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-02')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "162.120.184.41",
-                "endIpAddress": "162.120.184.41"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client02]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client02]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/gyim')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-03')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "61.251.250.9",
-                "endIpAddress": "61.251.250.9"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client03]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client03]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/gyim_out')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-04')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "172.30.1.36",
-                "endIpAddress": "172.30.1.36"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client04]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client04]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/gyim_out2')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-05')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "172.30.1.254",
-                "endIpAddress": "172.30.1.254"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client05]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client05]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/gyim_out3')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-06')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "175.192.75.38",
-                "endIpAddress": "175.192.75.38"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client06]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client06]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/jwlee')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-07')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "124.5.119.193",
-                "endIpAddress": "124.5.119.193"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client07]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client07]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/smseo')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-08')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "14.6.122.176",
-                "endIpAddress": "14.6.122.176"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client08]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client08]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/ynlee')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-09')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "172.30.1.72",
-                "endIpAddress": "172.30.1.72"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client09]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client09]"
             }
         },
         {
             "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
             "apiVersion": "2026-01-01-preview",
-            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/yunaleeClientIPAddress_2026-6-29_16-53-41')]",
+            "name": "[concat(parameters('flexibleServers_dt4_postgresql_name'), '/client-10')]",
             "dependsOn": [
                 "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('flexibleServers_dt4_postgresql_name'))]"
             ],
             "properties": {
-                "startIpAddress": "175.204.77.87",
-                "endIpAddress": "175.204.77.87"
+                "startIpAddress": "[parameters('postgresqlFirewallIpAddresses').client10]",
+                "endIpAddress": "[parameters('postgresqlFirewallIpAddresses').client10]"
             }
         },
         {
@@ -8227,8 +8275,8 @@
                                                 "method": "post",
                                                 "body": {
                                                     "recipient": {
-                                                        "groupId": "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df",
-                                                        "channelId": "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                                                        "groupId": "[parameters('teamsGroupId')]",
+                                                        "channelId": "[parameters('teamsChannelId')]"
                                                     },
                                                     "messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">🚨 [</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">System Alert</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">] Databricks 파이프라인 작업 실패 알림</strong></b></p><p class=\"editor-paragraph\"><br>데이터 파이프라인 수행 중 오류가 발생하여 작업이 중단되었습니다. 상세 내용을 확인 후 조치해 주시기 바랍니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                                                 },
@@ -8256,8 +8304,8 @@
                                                             "method": "post",
                                                             "body": {
                                                                 "recipient": {
-                                                                    "groupId": "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df",
-                                                                    "channelId": "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                                                                    "groupId": "[parameters('teamsGroupId')]",
+                                                                    "channelId": "[parameters('teamsChannelId')]"
                                                                 },
                                                                 "messageBody": "<p class=\"editor-paragraph\">✅<b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\"> [System Alert] Databricks 파이프라인 작업 성공 알림</strong></b></p><br><p class=\"editor-paragraph\">작업을 완료했습니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                                                             },
@@ -8278,8 +8326,8 @@
                                                                 "method": "post",
                                                                 "body": {
                                                                     "recipient": {
-                                                                        "groupId": "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df",
-                                                                        "channelId": "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                                                                        "groupId": "[parameters('teamsGroupId')]",
+                                                                        "channelId": "[parameters('teamsChannelId')]"
                                                                     },
                                                                     "messageBody": "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">✈️ [System Alert] Databricks 파이프라인 작업 시작 알림</strong></b><br></p><br><p class=\"editor-paragraph\">작업을 시작합니다.</p><br><p class=\"editor-paragraph\">- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                                                                 },
@@ -8529,19 +8577,19 @@
                     "$connections": {
                         "value": {
                             "teams-1": {
-                                "id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/teams')]",
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_teams_name'))]",
                                 "connectionName": "teams",
                                 "connectionProperties": {}
                             },
                             "teams-3": {
-                                "id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/teams')]",
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_teams_name'))]",
                                 "connectionName": "teams",
                                 "connectionProperties": {}
                             },
                             "teams-4": {
-                                "id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/northcentralus/managedApis/teams')]",
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_teams_name'))]",
                                 "connectionName": "teams",
                                 "connectionProperties": {}
@@ -8698,7 +8746,7 @@
                 "clientCertMode": "Required",
                 "hostNamesDisabled": false,
                 "ipMode": "IPv4",
-                "customDomainVerificationId": "520102906446FA8AD73B8CFA97C3FF8F5911B86B3D031F586F4B1F9C7A1868D5",
+                "customDomainVerificationId": "[parameters('appServiceCustomDomainVerificationId')]",
                 "containerSize": 0,
                 "dailyMemoryTimeQuota": 0,
                 "httpsOnly": true,
@@ -8731,7 +8779,7 @@
                 "[resourceId('Microsoft.Web/sites', parameters('sites_dt4_team1_func_collector_name'))]"
             ],
             "tags": {
-                "hidden-link: /app-insights-resource-id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+                "hidden-link: /app-insights-resource-id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector')]"
             },
             "properties": {
                 "allow": false
@@ -8758,7 +8806,7 @@
                 "[resourceId('Microsoft.Web/sites', parameters('sites_dt4_team1_func_collector_name'))]"
             ],
             "tags": {
-                "hidden-link: /app-insights-resource-id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+                "hidden-link: /app-insights-resource-id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector')]"
             },
             "properties": {
                 "allow": false
@@ -8856,7 +8904,7 @@
                 "[resourceId('Microsoft.Web/sites', parameters('sites_dt4_team1_func_collector_name'))]"
             ],
             "tags": {
-                "hidden-link: /app-insights-resource-id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+                "hidden-link: /app-insights-resource-id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector')]"
             },
             "properties": {
                 "numberOfWorkers": 1,
@@ -9727,7 +9775,7 @@
                 "[resourceId('Microsoft.Storage/StorageAccounts', parameters('storageAccounts_dt4team1blob_name'))]"
             ],
             "tags": {
-                "hidden-link: /app-insights-resource-id": "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+                "hidden-link: /app-insights-resource-id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector')]"
             },
             "kind": "functionapp,linux",
             "properties": {
@@ -9791,7 +9839,7 @@
                 "clientCertMode": "Required",
                 "hostNamesDisabled": false,
                 "ipMode": "IPv4",
-                "customDomainVerificationId": "520102906446FA8AD73B8CFA97C3FF8F5911B86B3D031F586F4B1F9C7A1868D5",
+                "customDomainVerificationId": "[parameters('appServiceCustomDomainVerificationId')]",
                 "containerSize": 1536,
                 "dailyMemoryTimeQuota": 0,
                 "httpsOnly": true,
