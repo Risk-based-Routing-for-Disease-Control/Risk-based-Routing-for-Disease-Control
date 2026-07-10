@@ -16,17 +16,17 @@ BioRoute 프로젝트에서 사용하는 Azure 인프라 정의 파일입니다.
 
 ```text
 infra/
-├── main_sanitized.tf
-├── main_sanitized.bicep
-├── template_sanitized.json
+├── dt4-team1-infra.terraform
+├── dt4-team1-infra.bicep
+├── azuredeploy.json
 └── README.md
 ```
 
 | 파일                        | 설명                            |
 | ------------------------- | ----------------------------- |
-| `main_sanitized.tf`       | Terraform 형식의 Azure 인프라 정의    |
-| `main_sanitized.bicep`    | Bicep 형식의 Azure 인프라 정의        |
-| `template_sanitized.json` | ARM Template 형식의 Azure 인프라 정의 |
+| `dt4-team1-infra.terraform`       | Terraform 형식의 Azure 인프라 정의    |
+| `dt4-team1-infra.bicep`    | Bicep 형식의 Azure 인프라 정의        |
+| `azuredeploy.json` | ARM Template 형식의 Azure 인프라 정의 |
 | `README.md`               | 인프라 구성 및 사용 방법 설명             |
 
 ---
