@@ -9,6 +9,93 @@ terraform {
 provider "azurerm" {
   features {}
 }
+
+
+data "azurerm_client_config" "current" {}
+
+variable "logic_app_webhook_url" {
+  description = "Signed Logic App webhook URL. Supply through a non-committed tfvars file or TF_VAR_logic_app_webhook_url."
+  type        = string
+  sensitive   = true
+}
+
+variable "office365_connection_display_name" {
+  description = "Office 365 connection display name, usually the connected account email."
+  type        = string
+  sensitive   = true
+}
+
+variable "teams_connection_display_name" {
+  description = "Microsoft Teams connection display name, usually the connected account email."
+  type        = string
+  sensitive   = true
+}
+
+variable "teams_channel_id" {
+  description = "Target Microsoft Teams channel ID."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_1" {
+  description = "PostgreSQL firewall IP address #1."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_2" {
+  description = "PostgreSQL firewall IP address #2."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_3" {
+  description = "PostgreSQL firewall IP address #3."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_4" {
+  description = "PostgreSQL firewall IP address #4."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_5" {
+  description = "PostgreSQL firewall IP address #5."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_6" {
+  description = "PostgreSQL firewall IP address #6."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_7" {
+  description = "PostgreSQL firewall IP address #7."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_8" {
+  description = "PostgreSQL firewall IP address #8."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_9" {
+  description = "PostgreSQL firewall IP address #9."
+  type        = string
+  sensitive   = true
+}
+
+variable "postgres_firewall_ip_10" {
+  description = "PostgreSQL firewall IP address #10."
+  type        = string
+  sensitive   = true
+}
 resource "azurerm_monitor_action_group" "res-0" {
   enabled             = true
   location            = "global"
@@ -18,7 +105,7 @@ resource "azurerm_monitor_action_group" "res-0" {
   tags                = {}
   webhook_receiver {
     name                    = "webhook"
-    service_uri             = "https://prod-16.northcentralus.logic.azure.com:443/workflows/80ee27e8a28346099f80f72c41483ae3/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=EAeqnGhDhfQQV-rYuHxzzu8AaXDrhYNMQA_hLqrG6ak"
+    service_uri             = var.logic_app_webhook_url
     use_common_alert_schema = true
   }
 }
@@ -3094,64 +3181,64 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "res-611" {
   start_ip_address = "0.0.0.0"
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-612" {
-  end_ip_address   = "175.193.34.4"
+  end_ip_address   = var.postgres_firewall_ip_1
   name             = "ClientIPAddress_2026-6-29_9-33-23"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "175.193.34.4"
+  start_ip_address = var.postgres_firewall_ip_1
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-613" {
-  end_ip_address   = "162.120.184.41"
+  end_ip_address   = var.postgres_firewall_ip_2
   name             = "ehjeon"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "162.120.184.41"
+  start_ip_address = var.postgres_firewall_ip_2
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-614" {
-  end_ip_address   = "61.251.250.9"
+  end_ip_address   = var.postgres_firewall_ip_3
   name             = "gyim"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "61.251.250.9"
+  start_ip_address = var.postgres_firewall_ip_3
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-615" {
-  end_ip_address   = "172.30.1.36"
+  end_ip_address   = var.postgres_firewall_ip_4
   name             = "gyim_out"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "172.30.1.36"
+  start_ip_address = var.postgres_firewall_ip_4
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-616" {
-  end_ip_address   = "172.30.1.254"
+  end_ip_address   = var.postgres_firewall_ip_5
   name             = "gyim_out2"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "172.30.1.254"
+  start_ip_address = var.postgres_firewall_ip_5
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-617" {
-  end_ip_address   = "175.192.75.38"
+  end_ip_address   = var.postgres_firewall_ip_6
   name             = "gyim_out3"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "175.192.75.38"
+  start_ip_address = var.postgres_firewall_ip_6
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-618" {
-  end_ip_address   = "124.5.119.193"
+  end_ip_address   = var.postgres_firewall_ip_7
   name             = "jwlee"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "124.5.119.193"
+  start_ip_address = var.postgres_firewall_ip_7
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-619" {
-  end_ip_address   = "14.6.122.176"
+  end_ip_address   = var.postgres_firewall_ip_8
   name             = "smseo"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "14.6.122.176"
+  start_ip_address = var.postgres_firewall_ip_8
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-620" {
-  end_ip_address   = "172.30.1.72"
+  end_ip_address   = var.postgres_firewall_ip_9
   name             = "ynlee"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "172.30.1.72"
+  start_ip_address = var.postgres_firewall_ip_9
 }
 resource "azurerm_postgresql_flexible_server_firewall_rule" "res-621" {
-  end_ip_address   = "175.204.77.87"
+  end_ip_address   = var.postgres_firewall_ip_10
   name             = "yunaleeClientIPAddress_2026-6-29_16-53-41"
   server_id        = azurerm_postgresql_flexible_server.res-2.id
-  start_ip_address = "175.204.77.87"
+  start_ip_address = var.postgres_firewall_ip_10
 }
 resource "azurerm_databricks_access_connector" "res-622" {
   location            = "eastus"
@@ -3200,7 +3287,7 @@ resource "azurerm_logic_app_workflow" "res-624" {
   logic_app_integration_account_id   = ""
   name                               = "dt4-team1-alert-logicapps"
   parameters = {
-    "$connections" = "{\"teams-1\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-3\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-4\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"}}"
+    "$connections" = "{\"teams-1\":{\"connectionId\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-3\":{\"connectionId\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-4\":{\"connectionId\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"}}"
   }
   resource_group_name = azurerm_resource_group.res-1.name
   tags                = {}
@@ -3256,7 +3343,7 @@ resource "azurerm_logic_app_action_custom" "res-625" {
               body = {
                 messageBody = "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">🚨 [</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">System Alert</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">] Databricks 파이프라인 작업 실패 알림</strong></b></p><p class=\"editor-paragraph\"><br>데이터 파이프라인 수행 중 오류가 발생하여 작업이 중단되었습니다. 상세 내용을 확인 후 조치해 주시기 바랍니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                 recipient = {
-                  channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                  channelId = var.teams_channel_id
                   groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
                 }
               }
@@ -3280,7 +3367,7 @@ resource "azurerm_logic_app_action_custom" "res-625" {
                     body = {
                       messageBody = "<p class=\"editor-paragraph\">✅<b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\"> [System Alert] Databricks 파이프라인 작업 성공 알림</strong></b></p><br><p class=\"editor-paragraph\">작업을 완료했습니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                       recipient = {
-                        channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                        channelId = var.teams_channel_id
                         groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
                       }
                     }
@@ -3302,7 +3389,7 @@ resource "azurerm_logic_app_action_custom" "res-625" {
                       body = {
                         messageBody = "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">✈️ [System Alert] Databricks 파이프라인 작업 시작 알림</strong></b><br></p><br><p class=\"editor-paragraph\">작업을 시작합니다.</p><br><p class=\"editor-paragraph\">- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
                         recipient = {
-                          channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                          channelId = var.teams_channel_id
                           groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
                         }
                       }
@@ -3610,8 +3697,8 @@ resource "azurerm_storage_container" "res-636" {
   storage_account_name              = ""
 }
 resource "azurerm_api_connection" "res-640" {
-  display_name        = "starboy@officestu.seoultech.ac.kr"
-  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/office365"
+  display_name        = var.office365_connection_display_name
+  managed_api_id      = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/office365"
   name                = "office365"
   parameter_values    = {}
   resource_group_name = azurerm_resource_group.res-1.name
@@ -3619,15 +3706,15 @@ resource "azurerm_api_connection" "res-640" {
 }
 resource "azurerm_api_connection" "res-641" {
   display_name        = "Outlook.com"
-  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
+  managed_api_id      = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
   name                = "outlook"
   parameter_values    = {}
   resource_group_name = azurerm_resource_group.res-1.name
   tags                = {}
 }
 resource "azurerm_api_connection" "res-642" {
-  display_name        = "4dt021@dataschool.msai.kr"
-  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams"
+  display_name        = var.teams_connection_display_name
+  managed_api_id      = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/northcentralus/managedApis/teams"
   name                = "teams"
   parameter_values    = {}
   resource_group_name = azurerm_resource_group.res-1.name
@@ -3762,7 +3849,7 @@ resource "azurerm_function_app_flex_consumption" "res-660" {
   storage_container_type             = "blobContainer"
   storage_user_assigned_identity_id  = ""
   tags = {
-    "hidden-link: /app-insights-resource-id" = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+    "hidden-link: /app-insights-resource-id" = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
   }
   virtual_network_subnet_id                      = ""
   webdeploy_publish_basic_authentication_enabled = false
@@ -4013,13 +4100,13 @@ resource "azurerm_monitor_smart_detector_alert_rule" "res-673" {
   frequency           = "PT1M"
   name                = "Failure Anomalies - dt4-team1-func-collector"
   resource_group_name = azurerm_resource_group.res-1.name
-  scope_resource_ids  = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourcegroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  scope_resource_ids  = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourcegroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
   severity            = "Sev3"
   tags                = {}
   throttling_duration = ""
   action_group {
     email_subject   = ""
-    ids             = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/a000-aml-rg/providers/Microsoft.Insights/actionGroups/application insights smart detection"]
+    ids             = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/a000-aml-rg/providers/Microsoft.Insights/actionGroups/application insights smart detection"]
     webhook_payload = ""
   }
 }
@@ -4048,7 +4135,7 @@ resource "azurerm_application_insights" "res-675" {
   retention_in_days                     = 90
   sampling_percentage                   = 0
   tags                                  = {}
-  workspace_id                          = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/DefaultResourceGroup-SE/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-27db5ec6-d206-4028-b5e1-6004dca5eeef-SE"
+  workspace_id                          = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/DefaultResourceGroup-SE/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-${data.azurerm_client_config.current.subscription_id}-SE"
 }
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-676" {
   auto_mitigation_enabled           = false
@@ -4061,7 +4148,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-676" {
   name                              = "collection fail"
   query_time_range_override         = ""
   resource_group_name               = azurerm_resource_group.res-1.name
-  scopes                            = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  scopes                            = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
   severity                          = 3
   skip_query_validation             = false
   tags                              = {}
@@ -4069,7 +4156,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-676" {
   window_duration                   = "PT1M"
   workspace_alerts_storage_enabled  = false
   action {
-    action_groups     = ["/subscriptions/27DB5EC6-D206-4028-B5E1-6004DCA5EEEF/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
+    action_groups     = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
     custom_properties = {}
   }
   criteria {
@@ -4106,7 +4193,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-677" {
   name                              = "collection_failure"
   query_time_range_override         = ""
   resource_group_name               = azurerm_resource_group.res-1.name
-  scopes                            = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  scopes                            = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
   severity                          = 3
   skip_query_validation             = false
   tags                              = {}
@@ -4114,7 +4201,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-677" {
   window_duration                   = "PT5M"
   workspace_alerts_storage_enabled  = false
   action {
-    action_groups     = ["/subscriptions/27DB5EC6-D206-4028-B5E1-6004DCA5EEEF/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
+    action_groups     = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
     custom_properties = {}
   }
   criteria {
