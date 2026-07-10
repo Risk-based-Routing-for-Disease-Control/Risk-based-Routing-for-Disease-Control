@@ -1,0 +1,4137 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "azurerm"
+      version = "4.66.0"
+    }
+  }
+}
+provider "azurerm" {
+  features {}
+}
+resource "azurerm_monitor_action_group" "res-0" {
+  enabled             = true
+  location            = "global"
+  name                = "collector"
+  resource_group_name = azurerm_resource_group.res-1.name
+  short_name          = "파이프라인 - 수집"
+  tags                = {}
+  webhook_receiver {
+    name                    = "webhook"
+    service_uri             = "https://prod-16.northcentralus.logic.azure.com:443/workflows/80ee27e8a28346099f80f72c41483ae3/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=EAeqnGhDhfQQV-rYuHxzzu8AaXDrhYNMQA_hLqrG6ak"
+    use_common_alert_schema = true
+  }
+}
+resource "azurerm_resource_group" "res-1" {
+  location   = "koreacentral"
+  managed_by = ""
+  name       = "dt4_project2_team1"
+  tags       = {}
+}
+resource "azurerm_postgresql_flexible_server" "res-2" {
+  administrator_login               = "azureuser"
+  administrator_password            = "" # Masked sensitive attribute
+  administrator_password_wo_version = 0
+  auto_grow_enabled                 = false
+  backup_retention_days             = 8
+  delegated_subnet_id               = ""
+  geo_redundant_backup_enabled      = false
+  location                          = "koreacentral"
+  name                              = "dt4-postgresql"
+  point_in_time_restore_time_in_utc = ""
+  private_dns_zone_id               = ""
+  public_network_access_enabled     = true
+  replication_role                  = ""
+  resource_group_name               = azurerm_resource_group.res-1.name
+  sku_name                          = "B_Standard_B2s"
+  source_server_id                  = ""
+  storage_mb                        = 32768
+  storage_tier                      = "P4"
+  tags                              = {}
+  version                           = "16"
+  zone                              = "1"
+  authentication {
+    active_directory_auth_enabled = false
+    password_auth_enabled         = true
+    tenant_id                     = ""
+  }
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-4" {
+  name      = "backup_639186372233515103"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-5" {
+  name      = "backup_639187236874677980"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-6" {
+  name      = "backup_639188101514754670"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-7" {
+  name      = "backup_639188965962463958"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-8" {
+  name      = "backup_639189830606599126"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-9" {
+  name      = "backup_639190695067358653"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-10" {
+  name      = "backup_639191559511505782"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_backup" "res-11" {
+  name      = "backup_639192423952801810"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-12" {
+  name      = "DateStyle"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "ISO, MDY"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-13" {
+  name      = "IntervalStyle"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "postgres"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-14" {
+  name      = "TimeZone"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "UTC"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-15" {
+  name      = "age.enable_containment"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-16" {
+  name      = "allow_in_place_tablespaces"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-17" {
+  name      = "allow_system_table_mods"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-18" {
+  name      = "anon.algorithm"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "sha256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-19" {
+  name      = "anon.k_anonymity_provider"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "k_anonymity"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-20" {
+  name      = "anon.masking_policies"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "anon"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-21" {
+  name      = "anon.maskschema"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "mask"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-22" {
+  name      = "anon.privacy_by_default"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-23" {
+  name      = "anon.restrict_to_trusted_schemas"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-24" {
+  name      = "anon.salt"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-25" {
+  name      = "anon.sourceschema"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "public"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-26" {
+  name      = "anon.strict_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-27" {
+  name      = "anon.transparent_dynamic_masking"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-28" {
+  name      = "application_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-29" {
+  name      = "archive_cleanup_command"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-30" {
+  name      = "archive_command"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "BlobLogUpload.sh %f %p"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-31" {
+  name      = "archive_library"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-32" {
+  name      = "archive_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "always"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-33" {
+  name      = "archive_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "300"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-34" {
+  name      = "array_nulls"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-35" {
+  name      = "authentication_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-36" {
+  name      = "auto_explain.log_analyze"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-37" {
+  name      = "auto_explain.log_buffers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-38" {
+  name      = "auto_explain.log_format"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "text"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-39" {
+  name      = "auto_explain.log_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-40" {
+  name      = "auto_explain.log_min_duration"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-41" {
+  name      = "auto_explain.log_nested_statements"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-42" {
+  name      = "auto_explain.log_parameter_max_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-43" {
+  name      = "auto_explain.log_settings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-44" {
+  name      = "auto_explain.log_timing"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-45" {
+  name      = "auto_explain.log_triggers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-46" {
+  name      = "auto_explain.log_verbose"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-47" {
+  name      = "auto_explain.log_wal"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-48" {
+  name      = "auto_explain.sample_rate"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1.0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-49" {
+  name      = "autovacuum"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-50" {
+  name      = "autovacuum_analyze_scale_factor"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-51" {
+  name      = "autovacuum_analyze_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "50"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-52" {
+  name      = "autovacuum_freeze_max_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "200000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-53" {
+  name      = "autovacuum_max_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "3"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-54" {
+  name      = "autovacuum_multixact_freeze_max_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "400000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-55" {
+  name      = "autovacuum_naptime"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "60"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-56" {
+  name      = "autovacuum_vacuum_cost_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-57" {
+  name      = "autovacuum_vacuum_cost_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-58" {
+  name      = "autovacuum_vacuum_insert_scale_factor"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-59" {
+  name      = "autovacuum_vacuum_insert_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-60" {
+  name      = "autovacuum_vacuum_scale_factor"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-61" {
+  name      = "autovacuum_vacuum_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "50"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-62" {
+  name      = "autovacuum_work_mem"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-63" {
+  name      = "azure.accepted_password_auth_method"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "md5,scram-sha-256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-64" {
+  name      = "azure.enable_temp_tablespaces_on_local_ssd"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-65" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-66" {
+  name      = "azure.fabric_mirror_enabled"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-67" {
+  name      = "azure.migration_copy_with_binary"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-68" {
+  name      = "azure.migration_skip_analyze"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-69" {
+  name      = "azure.migration_skip_extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-70" {
+  name      = "azure.migration_skip_large_objects"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-71" {
+  name      = "azure.migration_skip_role_user"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-72" {
+  name      = "azure.migration_table_split_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "20480"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-73" {
+  name      = "azure.service_principal_id"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-74" {
+  name      = "azure.service_principal_tenant_id"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-75" {
+  name      = "azure.single_to_flex_migration"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-76" {
+  name      = "azure_cdc.change_batch_buffer_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "16"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-77" {
+  name      = "azure_cdc.change_batch_export_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-78" {
+  name      = "azure_cdc.max_fabric_mirrors"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "3"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-79" {
+  name      = "azure_cdc.max_snapshot_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "3"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-80" {
+  name      = "azure_cdc.onelake_buffer_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-81" {
+  name      = "azure_cdc.parquet_compression"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "zstd"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-82" {
+  name      = "azure_cdc.snapshot_buffer_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-83" {
+  name      = "azure_cdc.snapshot_export_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "180"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-84" {
+  name      = "azure_storage.allow_network_access"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-85" {
+  name      = "azure_storage.blob_block_size_mb"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "128"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-86" {
+  name      = "azure_storage.log_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-87" {
+  name      = "azure_storage.public_account_access"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-88" {
+  name      = "backend_flush_after"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-89" {
+  name      = "backslash_quote"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "safe_encoding"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-90" {
+  name      = "backtrace_functions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-91" {
+  name      = "bgwriter_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "20"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-92" {
+  name      = "bgwriter_flush_after"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "64"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-93" {
+  name      = "bgwriter_lru_maxpages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-94" {
+  name      = "bgwriter_lru_multiplier"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-95" {
+  name      = "block_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8192"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-96" {
+  name      = "bonjour"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-97" {
+  name      = "bonjour_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-98" {
+  name      = "bytea_output"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "hex"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-99" {
+  name      = "check_function_bodies"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-100" {
+  name      = "checkpoint_completion_target"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.9"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-101" {
+  name      = "checkpoint_flush_after"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "32"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-102" {
+  name      = "checkpoint_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "600"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-103" {
+  name      = "checkpoint_warning"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-104" {
+  name      = "client_connection_check_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-105" {
+  name      = "client_encoding"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "UTF8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-106" {
+  name      = "client_min_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "notice"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-107" {
+  name      = "cluster_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-108" {
+  name      = "commit_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-109" {
+  name      = "commit_siblings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-110" {
+  name      = "compute_query_id"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "auto"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-111" {
+  name      = "config_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/pg/data/postgresql.conf"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-112" {
+  name      = "connection_throttle.bucket_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-113" {
+  name      = "connection_throttle.enable"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-114" {
+  name      = "connection_throttle.factor_bias"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-115" {
+  name      = "connection_throttle.hash_entries_max"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "500"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-116" {
+  name      = "connection_throttle.reset_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "120"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-117" {
+  name      = "connection_throttle.restore_factor"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-118" {
+  name      = "connection_throttle.update_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "20"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-119" {
+  name      = "constraint_exclusion"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "partition"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-120" {
+  name      = "cpu_index_tuple_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.005"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-121" {
+  name      = "cpu_operator_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.0025"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-122" {
+  name      = "cpu_tuple_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.01"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-123" {
+  name      = "createrole_self_grant"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-124" {
+  name      = "credcheck.auth_delay_ms"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-125" {
+  name      = "credcheck.auth_failure_cache_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-126" {
+  name      = "credcheck.encrypted_password_allowed"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-127" {
+  name      = "credcheck.history_max_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "65535"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-128" {
+  name      = "credcheck.max_auth_failure"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-129" {
+  name      = "credcheck.no_password_logging"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-130" {
+  name      = "credcheck.password_contain"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-131" {
+  name      = "credcheck.password_contain_username"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-132" {
+  name      = "credcheck.password_ignore_case"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-133" {
+  name      = "credcheck.password_min_digit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-134" {
+  name      = "credcheck.password_min_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-135" {
+  name      = "credcheck.password_min_lower"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-136" {
+  name      = "credcheck.password_min_repeat"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-137" {
+  name      = "credcheck.password_min_special"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-138" {
+  name      = "credcheck.password_min_upper"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-139" {
+  name      = "credcheck.password_not_contain"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-140" {
+  name      = "credcheck.password_reuse_history"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-141" {
+  name      = "credcheck.password_reuse_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-142" {
+  name      = "credcheck.password_valid_max"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-143" {
+  name      = "credcheck.password_valid_until"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-144" {
+  name      = "credcheck.reset_superuser"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-145" {
+  name      = "credcheck.username_contain"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-146" {
+  name      = "credcheck.username_contain_password"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-147" {
+  name      = "credcheck.username_ignore_case"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-148" {
+  name      = "credcheck.username_min_digit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-149" {
+  name      = "credcheck.username_min_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-150" {
+  name      = "credcheck.username_min_lower"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-151" {
+  name      = "credcheck.username_min_repeat"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-152" {
+  name      = "credcheck.username_min_special"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-153" {
+  name      = "credcheck.username_min_upper"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-154" {
+  name      = "credcheck.username_not_contain"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-155" {
+  name      = "credcheck.whitelist"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-156" {
+  name      = "credcheck.whitelist_auth_failure"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-157" {
+  name      = "cron.database_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "postgres"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-158" {
+  name      = "cron.enable_superuser_jobs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-159" {
+  name      = "cron.host"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/tmp"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-160" {
+  name      = "cron.launch_active_jobs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-161" {
+  name      = "cron.log_min_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "warning"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-162" {
+  name      = "cron.log_run"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-163" {
+  name      = "cron.log_statement"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-164" {
+  name      = "cron.max_running_jobs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "32"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-165" {
+  name      = "cron.timezone"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "GMT"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-166" {
+  name      = "cron.use_background_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-167" {
+  name      = "cursor_tuple_fraction"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-168" {
+  name      = "data_checksums"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-169" {
+  name      = "data_directory"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/pg/data"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-170" {
+  name      = "data_directory_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0700"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-171" {
+  name      = "data_sync_retry"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-172" {
+  name      = "db_user_namespace"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-173" {
+  name      = "deadlock_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-174" {
+  name      = "debug_assertions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-175" {
+  name      = "debug_discard_caches"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-176" {
+  name      = "debug_io_direct"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-177" {
+  name      = "debug_logical_replication_streaming"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "buffered"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-178" {
+  name      = "debug_parallel_query"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-179" {
+  name      = "debug_pretty_print"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-180" {
+  name      = "debug_print_parse"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-181" {
+  name      = "debug_print_plan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-182" {
+  name      = "debug_print_rewritten"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-183" {
+  name      = "default_statistics_target"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-184" {
+  name      = "default_table_access_method"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "heap"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-185" {
+  name      = "default_tablespace"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-186" {
+  name      = "default_text_search_config"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "pg_catalog.english"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-187" {
+  name      = "default_toast_compression"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "lz4"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-188" {
+  name      = "default_transaction_deferrable"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-189" {
+  name      = "default_transaction_isolation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "read committed"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-190" {
+  name      = "default_transaction_read_only"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-191" {
+  name      = "duckdb.allow_community_extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-192" {
+  name      = "duckdb.allow_unsigned_extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-193" {
+  name      = "duckdb.autoinstall_known_extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-194" {
+  name      = "duckdb.autoload_known_extensions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-195" {
+  name      = "duckdb.disabled_filesystems"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "LocalFileSystem"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-196" {
+  name      = "duckdb.enable_external_access"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-197" {
+  name      = "duckdb.force_execution"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-198" {
+  name      = "duckdb.max_memory"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-199" {
+  name      = "duckdb.max_workers_per_postgres_scan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-200" {
+  name      = "duckdb.memory_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-201" {
+  name      = "duckdb.postgres_role"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "azure_pg_duckdb_admin"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-202" {
+  name      = "duckdb.threads"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-203" {
+  name      = "duckdb.worker_threads"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-204" {
+  name      = "dynamic_library_path"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "$libdir"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-205" {
+  name      = "dynamic_shared_memory_type"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "posix"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-206" {
+  name      = "effective_cache_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "393216"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-207" {
+  name      = "effective_io_concurrency"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-208" {
+  name      = "enable_async_append"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-209" {
+  name      = "enable_bitmapscan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-210" {
+  name      = "enable_gathermerge"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-211" {
+  name      = "enable_hashagg"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-212" {
+  name      = "enable_hashjoin"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-213" {
+  name      = "enable_incremental_sort"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-214" {
+  name      = "enable_indexonlyscan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-215" {
+  name      = "enable_indexscan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-216" {
+  name      = "enable_material"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-217" {
+  name      = "enable_memoize"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-218" {
+  name      = "enable_mergejoin"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-219" {
+  name      = "enable_nestloop"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-220" {
+  name      = "enable_parallel_append"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-221" {
+  name      = "enable_parallel_hash"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-222" {
+  name      = "enable_partition_pruning"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-223" {
+  name      = "enable_partitionwise_aggregate"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-224" {
+  name      = "enable_partitionwise_join"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-225" {
+  name      = "enable_presorted_aggregate"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-226" {
+  name      = "enable_seqscan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-227" {
+  name      = "enable_sort"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-228" {
+  name      = "enable_tidscan"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-229" {
+  name      = "escape_string_warning"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-230" {
+  name      = "event_source"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "PostgreSQL"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-231" {
+  name      = "exit_on_error"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-232" {
+  name      = "external_pid_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-233" {
+  name      = "extra_float_digits"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-234" {
+  name      = "from_collapse_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-235" {
+  name      = "fsync"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-236" {
+  name      = "full_page_writes"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-237" {
+  name      = "geqo"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-238" {
+  name      = "geqo_effort"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-239" {
+  name      = "geqo_generations"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-240" {
+  name      = "geqo_pool_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-241" {
+  name      = "geqo_seed"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-242" {
+  name      = "geqo_selection_bias"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-243" {
+  name      = "geqo_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "12"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-244" {
+  name      = "gin_fuzzy_search_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-245" {
+  name      = "gin_pending_list_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "4096"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-246" {
+  name      = "gss_accept_delegation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-247" {
+  name      = "hash_mem_multiplier"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-248" {
+  name      = "hba_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/pg/data/pg_hba.conf"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-249" {
+  name      = "hot_standby"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-250" {
+  name      = "hot_standby_feedback"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-251" {
+  name      = "huge_page_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-252" {
+  name      = "huge_pages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "try"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-253" {
+  name      = "icu_validation_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "warning"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-254" {
+  name      = "ident_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/pg/data/pg_ident.conf"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-255" {
+  name      = "idle_in_transaction_session_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-256" {
+  name      = "idle_session_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-257" {
+  name      = "ignore_checksum_failure"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-258" {
+  name      = "ignore_invalid_pages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-259" {
+  name      = "ignore_system_indexes"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-260" {
+  name      = "in_hot_standby"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-261" {
+  name      = "integer_datetimes"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-262" {
+  name      = "intelligent_tuning"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-263" {
+  name      = "intelligent_tuning.metric_targets"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-264" {
+  name      = "jit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-265" {
+  name      = "jit_above_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-266" {
+  name      = "jit_debugging_support"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-267" {
+  name      = "jit_dump_bitcode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-268" {
+  name      = "jit_expressions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-269" {
+  name      = "jit_inline_above_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "500000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-270" {
+  name      = "jit_optimize_above_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "500000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-271" {
+  name      = "jit_profiling_support"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-272" {
+  name      = "jit_provider"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "llvmjit"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-273" {
+  name      = "jit_tuple_deforming"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-274" {
+  name      = "join_collapse_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-275" {
+  name      = "krb_caseins_users"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-276" {
+  name      = "krb_server_keyfile"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-277" {
+  name      = "lc_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "en_US.utf8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-278" {
+  name      = "lc_monetary"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "en_US.utf-8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-279" {
+  name      = "lc_numeric"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "en_US.utf-8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-280" {
+  name      = "lc_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "en_US.utf8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-281" {
+  name      = "listen_addresses"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "*"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-282" {
+  name      = "lo_compat_privileges"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-283" {
+  name      = "local_preload_libraries"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-284" {
+  name      = "lock_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-285" {
+  name      = "log_autovacuum_min_duration"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "600000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-286" {
+  name      = "log_checkpoints"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-287" {
+  name      = "log_connections"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-288" {
+  name      = "log_destination"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "stderr"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-289" {
+  name      = "log_directory"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-290" {
+  name      = "log_disconnections"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-291" {
+  name      = "log_duration"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-292" {
+  name      = "log_error_verbosity"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "default"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-293" {
+  name      = "log_executor_stats"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-294" {
+  name      = "log_file_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0600"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-295" {
+  name      = "log_filename"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "postgresql-%Y-%m-%d_%H%M%S.log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-296" {
+  name      = "log_hostname"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-297" {
+  name      = "log_line_prefix"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "%t-%c-"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-298" {
+  name      = "log_lock_waits"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-299" {
+  name      = "log_min_duration_sample"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-300" {
+  name      = "log_min_duration_statement"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-301" {
+  name      = "log_min_error_statement"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "error"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-302" {
+  name      = "log_min_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "warning"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-303" {
+  name      = "log_parameter_max_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-304" {
+  name      = "log_parameter_max_length_on_error"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-305" {
+  name      = "log_parser_stats"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-306" {
+  name      = "log_planner_stats"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-307" {
+  name      = "log_recovery_conflict_waits"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-308" {
+  name      = "log_replication_commands"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-309" {
+  name      = "log_rotation_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "60"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-310" {
+  name      = "log_rotation_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "102400"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-311" {
+  name      = "log_startup_progress_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-312" {
+  name      = "log_statement"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-313" {
+  name      = "log_statement_sample_rate"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-314" {
+  name      = "log_statement_stats"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-315" {
+  name      = "log_temp_files"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-316" {
+  name      = "log_timezone"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "UTC"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-317" {
+  name      = "log_transaction_sample_rate"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-318" {
+  name      = "log_truncate_on_rotation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-319" {
+  name      = "logfiles.download_enable"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-320" {
+  name      = "logfiles.retention_days"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "3"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-321" {
+  name      = "logging_collector"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-322" {
+  name      = "logical_decoding_work_mem"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "65536"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-323" {
+  name      = "maintenance_io_concurrency"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-324" {
+  name      = "maintenance_work_mem"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "157696"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-325" {
+  name      = "max_connections"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "429"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-326" {
+  name      = "max_files_per_process"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-327" {
+  name      = "max_function_args"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-328" {
+  name      = "max_identifier_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "63"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-329" {
+  name      = "max_index_keys"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "32"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-330" {
+  name      = "max_locks_per_transaction"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "64"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-331" {
+  name      = "max_logical_replication_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "4"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-332" {
+  name      = "max_parallel_apply_workers_per_subscription"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-333" {
+  name      = "max_parallel_maintenance_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-334" {
+  name      = "max_parallel_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-335" {
+  name      = "max_parallel_workers_per_gather"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-336" {
+  name      = "max_pred_locks_per_page"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-337" {
+  name      = "max_pred_locks_per_relation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-338" {
+  name      = "max_pred_locks_per_transaction"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "64"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-339" {
+  name      = "max_prepared_transactions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-340" {
+  name      = "max_replication_slots"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-341" {
+  name      = "max_slot_wal_keep_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-342" {
+  name      = "max_stack_depth"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-343" {
+  name      = "max_standby_archive_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-344" {
+  name      = "max_standby_streaming_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-345" {
+  name      = "max_sync_workers_per_subscription"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-346" {
+  name      = "max_wal_senders"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-347" {
+  name      = "max_wal_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-348" {
+  name      = "max_worker_processes"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-349" {
+  name      = "metrics.autovacuum_diagnostics"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-350" {
+  name      = "metrics.collector_database_activity"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-351" {
+  name      = "metrics.pgbouncer_diagnostics"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-352" {
+  name      = "min_dynamic_shared_memory"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-353" {
+  name      = "min_parallel_index_scan_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "64"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-354" {
+  name      = "min_parallel_table_scan_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-355" {
+  name      = "min_wal_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "80"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-356" {
+  name      = "old_snapshot_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-357" {
+  name      = "parallel_leader_participation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-358" {
+  name      = "parallel_setup_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-359" {
+  name      = "parallel_tuple_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-360" {
+  name      = "password_encryption"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "scram-sha-256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-361" {
+  name      = "pg_failover_slots.drop_extra_slots"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-362" {
+  name      = "pg_failover_slots.primary_dsn"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-363" {
+  name      = "pg_failover_slots.standby_slot_names"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "azure_standby_, wal_replica_"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-364" {
+  name      = "pg_failover_slots.standby_slots_min_confirmed"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-365" {
+  name      = "pg_failover_slots.synchronize_slot_names"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "name_like:%%"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-366" {
+  name      = "pg_failover_slots.version"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1.0.1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-367" {
+  name      = "pg_failover_slots.wait_for_inactive_slots"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-368" {
+  name      = "pg_hint_plan.debug_print"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-369" {
+  name      = "pg_hint_plan.enable_hint"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-370" {
+  name      = "pg_hint_plan.enable_hint_table"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-371" {
+  name      = "pg_hint_plan.hints_anywhere"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-372" {
+  name      = "pg_hint_plan.message_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-373" {
+  name      = "pg_hint_plan.parse_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "info"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-374" {
+  name      = "pg_partman_bgw.analyze"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-375" {
+  name      = "pg_partman_bgw.dbname"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-376" {
+  name      = "pg_partman_bgw.interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "3600"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-377" {
+  name      = "pg_partman_bgw.jobmon"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-378" {
+  name      = "pg_partman_bgw.maintenance_wait"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-379" {
+  name      = "pg_partman_bgw.role"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-380" {
+  name      = "pg_prewarm.autoprewarm"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-381" {
+  name      = "pg_prewarm.autoprewarm_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "300"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-382" {
+  name      = "pg_qs.emit_query_text"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-383" {
+  name      = "pg_qs.interval_length_minutes"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "15"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-384" {
+  name      = "pg_qs.is_enabled_fs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-385" {
+  name      = "pg_qs.max_captured_queries"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "500"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-386" {
+  name      = "pg_qs.max_plan_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "7500"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-387" {
+  name      = "pg_qs.max_query_text_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "6000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-388" {
+  name      = "pg_qs.parameters_capture_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "capture_parameterless_only"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-389" {
+  name      = "pg_qs.query_capture_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-390" {
+  name      = "pg_qs.retention_period_in_days"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "7"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-391" {
+  name      = "pg_qs.store_query_plans"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-392" {
+  name      = "pg_qs.track_utility"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-393" {
+  name      = "pg_stat_statements.max"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-394" {
+  name      = "pg_stat_statements.save"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-395" {
+  name      = "pg_stat_statements.track"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-396" {
+  name      = "pg_stat_statements.track_planning"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-397" {
+  name      = "pg_stat_statements.track_utility"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-398" {
+  name      = "pgaadauth.enable_group_sync"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-399" {
+  name      = "pgaudit.log"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-400" {
+  name      = "pgaudit.log_catalog"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-401" {
+  name      = "pgaudit.log_client"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-402" {
+  name      = "pgaudit.log_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-403" {
+  name      = "pgaudit.log_parameter"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-404" {
+  name      = "pgaudit.log_parameter_max_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-405" {
+  name      = "pgaudit.log_relation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-406" {
+  name      = "pgaudit.log_rows"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-407" {
+  name      = "pgaudit.log_statement"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-408" {
+  name      = "pgaudit.log_statement_once"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-409" {
+  name      = "pgaudit.role"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-410" {
+  name      = "pglogical.batch_inserts"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-411" {
+  name      = "pglogical.conflict_log_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-412" {
+  name      = "pglogical.conflict_resolution"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "apply_remote"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-413" {
+  name      = "pglogical.extra_connection_options"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-414" {
+  name      = "pglogical.synchronous_commit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-415" {
+  name      = "pglogical.temp_directory"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-416" {
+  name      = "pglogical.use_spi"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-417" {
+  name      = "pgms_stats.is_enabled_fs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-418" {
+  name      = "pgms_wait_sampling.history_period"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "100"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-419" {
+  name      = "pgms_wait_sampling.is_enabled_fs"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-420" {
+  name      = "pgms_wait_sampling.query_capture_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-421" {
+  name      = "plan_cache_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "auto"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-422" {
+  name      = "plpgsql_check.compatibility_warnings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-423" {
+  name      = "plpgsql_check.constants_tracing"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-424" {
+  name      = "plpgsql_check.cursors_leaks"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-425" {
+  name      = "plpgsql_check.cursors_leaks_errlevel"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "warning"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-426" {
+  name      = "plpgsql_check.enable_tracer"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-427" {
+  name      = "plpgsql_check.fatal_errors"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-428" {
+  name      = "plpgsql_check.mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "by_function"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-429" {
+  name      = "plpgsql_check.profiler"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-430" {
+  name      = "plpgsql_check.profiler_max_shared_chunks"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "15000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-431" {
+  name      = "plpgsql_check.regress_test_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-432" {
+  name      = "plpgsql_check.show_nonperformance_extra_warnings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-433" {
+  name      = "plpgsql_check.show_nonperformance_warnings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-434" {
+  name      = "plpgsql_check.show_performance_warnings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-435" {
+  name      = "plpgsql_check.strict_cursors_leaks"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-436" {
+  name      = "plpgsql_check.trace_assert"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-437" {
+  name      = "plpgsql_check.trace_assert_verbosity"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "default"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-438" {
+  name      = "plpgsql_check.tracer"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-439" {
+  name      = "plpgsql_check.tracer_errlevel"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "notice"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-440" {
+  name      = "plpgsql_check.tracer_show_nsubxids"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-441" {
+  name      = "plpgsql_check.tracer_test_mode"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-442" {
+  name      = "plpgsql_check.tracer_variable_max_length"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-443" {
+  name      = "plpgsql_check.tracer_verbosity"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "default"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-444" {
+  name      = "port"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5432"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-445" {
+  name      = "post_auth_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-446" {
+  name      = "postgis.gdal_enabled_drivers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "DISABLE_ALL"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-447" {
+  name      = "pre_auth_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-448" {
+  name      = "primary_conninfo"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-449" {
+  name      = "primary_slot_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-450" {
+  name      = "quote_all_identifiers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-451" {
+  name      = "random_page_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-452" {
+  name      = "rdkit.agent_FP_bit_ratio"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-453" {
+  name      = "rdkit.avalon_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "512"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-454" {
+  name      = "rdkit.dice_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-455" {
+  name      = "rdkit.difference_FP_weight_agents"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-456" {
+  name      = "rdkit.difference_FP_weight_nonagents"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-457" {
+  name      = "rdkit.do_chiral_sss"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-458" {
+  name      = "rdkit.do_enhanced_stereo_sss"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-459" {
+  name      = "rdkit.featmorgan_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "512"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-460" {
+  name      = "rdkit.hashed_atompair_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-461" {
+  name      = "rdkit.hashed_torsion_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-462" {
+  name      = "rdkit.ignore_reaction_agents"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-463" {
+  name      = "rdkit.init_reaction"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-464" {
+  name      = "rdkit.layered_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-465" {
+  name      = "rdkit.morgan_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "512"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-466" {
+  name      = "rdkit.move_unmmapped_reactants_to_agents"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-467" {
+  name      = "rdkit.rdkit_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-468" {
+  name      = "rdkit.reaction_difference_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-469" {
+  name      = "rdkit.reaction_difference_fp_type"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-470" {
+  name      = "rdkit.reaction_sss_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "4096"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-471" {
+  name      = "rdkit.reaction_sss_fp_type"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-472" {
+  name      = "rdkit.sss_fp_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-473" {
+  name      = "rdkit.tanimoto_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-474" {
+  name      = "rdkit.threshold_unmapped_reactant_atoms"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0.2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-475" {
+  name      = "recovery_end_command"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-476" {
+  name      = "recovery_init_sync_method"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "fsync"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-477" {
+  name      = "recovery_min_apply_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-478" {
+  name      = "recovery_prefetch"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "try"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-479" {
+  name      = "recovery_target"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-480" {
+  name      = "recovery_target_action"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "pause"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-481" {
+  name      = "recovery_target_inclusive"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-482" {
+  name      = "recovery_target_lsn"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-483" {
+  name      = "recovery_target_name"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-484" {
+  name      = "recovery_target_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-485" {
+  name      = "recovery_target_timeline"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "latest"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-486" {
+  name      = "recovery_target_xid"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-487" {
+  name      = "recursive_worktable_factor"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-488" {
+  name      = "remove_temp_files_after_crash"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-489" {
+  name      = "require_secure_transport"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-490" {
+  name      = "reserved_connections"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-491" {
+  name      = "restart_after_crash"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-492" {
+  name      = "restore_command"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-493" {
+  name      = "restrict_nonsystem_relation_kind"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-494" {
+  name      = "row_security"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-495" {
+  name      = "scram_iterations"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "4096"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-496" {
+  name      = "search_path"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "\"$user\", public"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-497" {
+  name      = "segment_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "131072"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-498" {
+  name      = "send_abort_for_crash"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-499" {
+  name      = "send_abort_for_kill"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-500" {
+  name      = "seq_page_cost"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-501" {
+  name      = "server_encoding"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "UTF8"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-502" {
+  name      = "server_version"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "16.14"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-503" {
+  name      = "server_version_num"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "160014"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-504" {
+  name      = "session_preload_libraries"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-505" {
+  name      = "session_replication_role"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "origin"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-506" {
+  name      = "shared_buffers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "131072"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-507" {
+  name      = "shared_memory_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1125"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-508" {
+  name      = "shared_memory_size_in_huge_pages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "563"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-509" {
+  name      = "shared_memory_type"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "mmap"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-510" {
+  name      = "shared_preload_libraries"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "pg_cron,pg_stat_statements"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-511" {
+  name      = "squeeze.max_xlock_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-512" {
+  name      = "squeeze.worker_autostart"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-513" {
+  name      = "squeeze.worker_role"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-514" {
+  name      = "squeeze.workers_per_database"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-515" {
+  name      = "ssl"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-516" {
+  name      = "ssl_ca_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/certs/ca.pem"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-517" {
+  name      = "ssl_cert_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/certs/cert.pem"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-518" {
+  name      = "ssl_ciphers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-519" {
+  name      = "ssl_crl_dir"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-520" {
+  name      = "ssl_crl_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-521" {
+  name      = "ssl_dh_params_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-522" {
+  name      = "ssl_ecdh_curve"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "prime256v1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-523" {
+  name      = "ssl_key_file"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/datadrive/certs/key.pem"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-524" {
+  name      = "ssl_library"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "OpenSSL"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-525" {
+  name      = "ssl_max_protocol_version"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-526" {
+  name      = "ssl_min_protocol_version"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "TLSv1.2"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-527" {
+  name      = "ssl_passphrase_command"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-528" {
+  name      = "ssl_passphrase_command_supports_reload"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-529" {
+  name      = "ssl_prefer_server_ciphers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-530" {
+  name      = "standard_conforming_strings"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-531" {
+  name      = "statement_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-532" {
+  name      = "stats_fetch_consistency"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "cache"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-533" {
+  name      = "superuser_reserved_connections"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-534" {
+  name      = "synchronize_seqscans"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-535" {
+  name      = "synchronous_commit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-536" {
+  name      = "synchronous_standby_names"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-537" {
+  name      = "syslog_facility"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "local0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-538" {
+  name      = "syslog_ident"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "postgres"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-539" {
+  name      = "syslog_sequence_numbers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-540" {
+  name      = "syslog_split_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-541" {
+  name      = "tcp_keepalives_count"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "9"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-542" {
+  name      = "tcp_keepalives_idle"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "120"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-543" {
+  name      = "tcp_keepalives_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "30"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-544" {
+  name      = "tcp_user_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-545" {
+  name      = "temp_buffers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-546" {
+  name      = "temp_file_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "-1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-547" {
+  name      = "temp_tablespaces"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-548" {
+  name      = "timescaledb.bgw_launcher_poll_time"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "60000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-549" {
+  name      = "timescaledb.disable_load"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-550" {
+  name      = "timescaledb.max_background_workers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "16"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-551" {
+  name      = "timescaledb_osm.disable_load"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-552" {
+  name      = "timezone_abbreviations"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "Default"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-553" {
+  name      = "trace_notify"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-554" {
+  name      = "trace_recovery_messages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "log"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-555" {
+  name      = "trace_sort"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-556" {
+  name      = "track_activities"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-557" {
+  name      = "track_activity_query_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1024"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-558" {
+  name      = "track_commit_timestamp"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-559" {
+  name      = "track_counts"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-560" {
+  name      = "track_functions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "none"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-561" {
+  name      = "track_io_timing"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-562" {
+  name      = "track_wal_io_timing"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-563" {
+  name      = "transaction_deferrable"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-564" {
+  name      = "transaction_isolation"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "read committed"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-565" {
+  name      = "transaction_read_only"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-566" {
+  name      = "transform_null_equals"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-567" {
+  name      = "unix_socket_directories"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "/tmp,/tmp/tuning_sockets"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-568" {
+  name      = "unix_socket_group"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-569" {
+  name      = "unix_socket_permissions"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0777"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-570" {
+  name      = "update_process_title"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-571" {
+  name      = "vacuum_buffer_usage_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "256"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-572" {
+  name      = "vacuum_cost_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "0"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-573" {
+  name      = "vacuum_cost_limit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "200"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-574" {
+  name      = "vacuum_cost_page_dirty"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "20"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-575" {
+  name      = "vacuum_cost_page_hit"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-576" {
+  name      = "vacuum_cost_page_miss"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-577" {
+  name      = "vacuum_failsafe_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1600000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-578" {
+  name      = "vacuum_freeze_min_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "50000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-579" {
+  name      = "vacuum_freeze_table_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "150000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-580" {
+  name      = "vacuum_multixact_failsafe_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "1600000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-581" {
+  name      = "vacuum_multixact_freeze_min_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-582" {
+  name      = "vacuum_multixact_freeze_table_age"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "150000000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-583" {
+  name      = "wal_block_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "8192"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-584" {
+  name      = "wal_buffers"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-585" {
+  name      = "wal_compression"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-586" {
+  name      = "wal_consistency_checking"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = ""
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-587" {
+  name      = "wal_decode_buffer_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "524288"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-588" {
+  name      = "wal_init_zero"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-589" {
+  name      = "wal_keep_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "400"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-590" {
+  name      = "wal_level"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "replica"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-591" {
+  name      = "wal_log_hints"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-592" {
+  name      = "wal_receiver_create_temp_slot"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-593" {
+  name      = "wal_receiver_status_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "10"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-594" {
+  name      = "wal_receiver_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "60000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-595" {
+  name      = "wal_recycle"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "on"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-596" {
+  name      = "wal_retrieve_retry_interval"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "5000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-597" {
+  name      = "wal_segment_size"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "16777216"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-598" {
+  name      = "wal_sender_timeout"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "60000"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-599" {
+  name      = "wal_skip_threshold"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "2048"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-600" {
+  name      = "wal_sync_method"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "fdatasync"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-601" {
+  name      = "wal_writer_delay"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "200"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-602" {
+  name      = "wal_writer_flush_after"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "128"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-603" {
+  name      = "work_mem"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "4096"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-604" {
+  name      = "xmlbinary"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "base64"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-605" {
+  name      = "xmloption"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "content"
+}
+resource "azurerm_postgresql_flexible_server_configuration" "res-606" {
+  name      = "zero_damaged_pages"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+  value     = "off"
+}
+resource "azurerm_postgresql_flexible_server_database" "res-607" {
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+  name      = "azure_maintenance"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_database" "res-608" {
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+  name      = "azure_sys"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_database" "res-609" {
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+  name      = "bioroute_db"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_database" "res-610" {
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+  name      = "postgres"
+  server_id = azurerm_postgresql_flexible_server.res-2.id
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-611" {
+  end_ip_address   = "0.0.0.0"
+  name             = "AllowAllAzureServicesAndResourcesWithinAzureIps_2026-6-29_9-51-46"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "0.0.0.0"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-612" {
+  end_ip_address   = "175.193.34.4"
+  name             = "ClientIPAddress_2026-6-29_9-33-23"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "175.193.34.4"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-613" {
+  end_ip_address   = "162.120.184.41"
+  name             = "ehjeon"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "162.120.184.41"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-614" {
+  end_ip_address   = "61.251.250.9"
+  name             = "gyim"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "61.251.250.9"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-615" {
+  end_ip_address   = "172.30.1.36"
+  name             = "gyim_out"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "172.30.1.36"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-616" {
+  end_ip_address   = "172.30.1.254"
+  name             = "gyim_out2"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "172.30.1.254"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-617" {
+  end_ip_address   = "175.192.75.38"
+  name             = "gyim_out3"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "175.192.75.38"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-618" {
+  end_ip_address   = "124.5.119.193"
+  name             = "jwlee"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "124.5.119.193"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-619" {
+  end_ip_address   = "14.6.122.176"
+  name             = "smseo"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "14.6.122.176"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-620" {
+  end_ip_address   = "172.30.1.72"
+  name             = "ynlee"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "172.30.1.72"
+}
+resource "azurerm_postgresql_flexible_server_firewall_rule" "res-621" {
+  end_ip_address   = "175.204.77.87"
+  name             = "yunaleeClientIPAddress_2026-6-29_16-53-41"
+  server_id        = azurerm_postgresql_flexible_server.res-2.id
+  start_ip_address = "175.204.77.87"
+}
+resource "azurerm_databricks_access_connector" "res-622" {
+  location            = "eastus"
+  name                = "dt4_team1_connector"
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+  identity {
+    identity_ids = []
+    type         = "SystemAssigned"
+  }
+}
+resource "azurerm_databricks_workspace" "res-623" {
+  customer_managed_key_enabled                        = false
+  infrastructure_encryption_enabled                   = false
+  load_balancer_backend_address_pool_id               = ""
+  location                                            = "westus2"
+  managed_disk_cmk_key_vault_id                       = ""
+  managed_disk_cmk_key_vault_key_id                   = ""
+  managed_disk_cmk_rotation_to_latest_version_enabled = false
+  managed_resource_group_name                         = "databricks-rg-dt4_team1_databricks-osohwq5crjhlc"
+  managed_services_cmk_key_vault_id                   = ""
+  managed_services_cmk_key_vault_key_id               = ""
+  name                                                = "dt4_team1_databricks"
+  resource_group_name                                 = azurerm_resource_group.res-1.name
+  sku                                                 = "trial"
+  tags                                                = {}
+  custom_parameters {
+    machine_learning_workspace_id                        = ""
+    nat_gateway_name                                     = ""
+    no_public_ip                                         = true
+    private_subnet_name                                  = ""
+    private_subnet_network_security_group_association_id = ""
+    public_ip_name                                       = ""
+    public_subnet_name                                   = ""
+    public_subnet_network_security_group_association_id  = ""
+    storage_account_name                                 = "dbstorage2ir6sys2wego6"
+    storage_account_sku_name                             = "Standard_ZRS"
+    virtual_network_id                                   = ""
+    vnet_address_prefix                                  = ""
+  }
+}
+resource "azurerm_logic_app_workflow" "res-624" {
+  enabled                            = true
+  integration_service_environment_id = ""
+  location                           = "northcentralus"
+  logic_app_integration_account_id   = ""
+  name                               = "dt4-team1-alert-logicapps"
+  parameters = {
+    "$connections" = "{\"teams-1\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-3\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"},\"teams-4\":{\"connectionId\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/Microsoft.Web/connections/teams\",\"connectionName\":\"teams\",\"connectionProperties\":{},\"id\":\"/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams\"}}"
+  }
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+  workflow_parameters = {
+    "$connections" = "{\"defaultValue\":{},\"type\":\"Object\"}"
+  }
+  workflow_schema  = "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
+  workflow_version = "1.0.0.0"
+}
+resource "azurerm_logic_app_action_custom" "res-625" {
+  body = jsonencode({
+    actions = {
+      Databricks_메시지_파싱 = {
+        inputs = {
+          content = "@triggerBody()"
+          schema = {
+            properties = {
+              event_type = {
+                type = "string"
+              }
+              job = {
+                properties = {
+                  job_id = {
+                    type = "integer"
+                  }
+                  name = {
+                    type = "string"
+                  }
+                }
+                type = "object"
+              }
+              run = {
+                properties = {
+                  run_id = {
+                    type = "integer"
+                  }
+                }
+                type = "object"
+              }
+              workspace_id = {
+                type = "integer"
+              }
+            }
+            type = "object"
+          }
+        }
+        type = "ParseJson"
+      }
+      실패_여부_분기 = {
+        actions = {
+          채팅_또는_채널에서_메시지_게시 = {
+            inputs = {
+              body = {
+                messageBody = "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">🚨 [</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">System Alert</strong></b><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">] Databricks 파이프라인 작업 실패 알림</strong></b></p><p class=\"editor-paragraph\"><br>데이터 파이프라인 수행 중 오류가 발생하여 작업이 중단되었습니다. 상세 내용을 확인 후 조치해 주시기 바랍니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
+                recipient = {
+                  channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                  groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
+                }
+              }
+              host = {
+                connection = {
+                  name = "@parameters('$connections')['teams-1']['connectionId']"
+                }
+              }
+              method = "post"
+              path   = "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+            }
+            type = "ApiConnection"
+          }
+        }
+        else = {
+          actions = {
+            성공시작_여부_분기 = {
+              actions = {
+                채팅_또는_채널에서_메시지_게시_1 = {
+                  inputs = {
+                    body = {
+                      messageBody = "<p class=\"editor-paragraph\">✅<b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\"> [System Alert] Databricks 파이프라인 작업 성공 알림</strong></b></p><br><p class=\"editor-paragraph\">작업을 완료했습니다.</p><p class=\"editor-paragraph\"><br>- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
+                      recipient = {
+                        channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                        groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
+                      }
+                    }
+                    host = {
+                      connection = {
+                        name = "@parameters('$connections')['teams-3']['connectionId']"
+                      }
+                    }
+                    method = "post"
+                    path   = "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                  }
+                  type = "ApiConnection"
+                }
+              }
+              else = {
+                actions = {
+                  채팅_또는_채널에서_메시지_게시_2 = {
+                    inputs = {
+                      body = {
+                        messageBody = "<p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\" style=\"font-size: 20px;\">✈️ [System Alert] Databricks 파이프라인 작업 시작 알림</strong></b><br></p><br><p class=\"editor-paragraph\">작업을 시작합니다.</p><br><p class=\"editor-paragraph\">- 작업 이름 (Job Name): @{body('Databricks_메시지_파싱')?['job']?['name']}<br>- 워크스페이스 ID (Workspace ID): @{body('Databricks_메시지_파싱')?['workspace_id']}<br>- 작업 ID (Job ID): @{body('Databricks_메시지_파싱')?['job']?['job_id']}<br>- 실행 ID (Run ID): @{body('Databricks_메시지_파싱')?['run']?['run_id']}</p>"
+                        recipient = {
+                          channelId = "19:I-nJwkHX6lGsGrsUHSSDh30emSkpFAHpZpNqGO_ugIM1@thread.tacv2"
+                          groupId   = "d3a3c7bf-dcb4-4dcf-a4bb-b50b18b953df"
+                        }
+                      }
+                      host = {
+                        connection = {
+                          name = "@parameters('$connections')['teams-3']['connectionId']"
+                        }
+                      }
+                      method = "post"
+                      path   = "/beta/teams/conversation/message/poster/Flow bot/location/@{encodeURIComponent('Channel')}"
+                    }
+                    type = "ApiConnection"
+                  }
+                }
+              }
+              expression = {
+                and = [{
+                  equals = ["@body('Databricks_메시지_파싱')?['event_type']", "jobs.on_success"]
+                }]
+              }
+              type = "If"
+            }
+          }
+        }
+        expression = {
+          and = [{
+            equals = ["@body('Databricks_메시지_파싱')?['event_type']", "jobs.on_failure"]
+          }]
+        }
+        runAfter = {
+          Databricks_메시지_파싱 = ["Succeeded"]
+        }
+        type = "If"
+      }
+    }
+    else = {
+      actions = {
+        Condition_1 = {
+          actions = {
+            자신에게_메시지_게시 = {
+              inputs = {
+                body = {
+                  body = {
+                    content     = "🚨 [System Alert] 수집 Function 성공\n\n데이터 수집에 성공하였습니다.\n\nFunction: @{first(body('FilterFunctionName'))?['value']}\n\n성공 시각: @{convertTimeZone(body('Function_메시지_파싱')?['data']?['essentials']?['firedDateTime'], 'UTC', 'Korea Standard Time', 'yyyy-MM-dd HH:mm:ss')}"
+                    contentType = "text"
+                  }
+                }
+                host = {
+                  connection = {
+                    name = "@parameters('$connections')['teams-4']['connectionId']"
+                  }
+                }
+                method = "post"
+                path   = "/v1.0/chats/48:notes/messages"
+              }
+              type = "ApiConnection"
+            }
+          }
+          else = {
+            actions = {}
+          }
+          expression = {
+            and = [{
+              equals = ["first(body('FilterResultCode'))?['value']", 200]
+            }]
+          }
+          runAfter = {
+            FilterResultCode = ["Succeeded"]
+          }
+          type = "If"
+        }
+        FilterFunctionName = {
+          inputs = {
+            from  = "@body('Function_메시지_파싱')?['data']?['alertContext']?['condition']?['allOf'][0]?['dimensions']"
+            where = "@equals(item()?['name'], 'functionName')"
+          }
+          runAfter = {
+            Function_메시지_파싱 = ["Succeeded"]
+          }
+          type = "Query"
+        }
+        FilterResultCode = {
+          inputs = {
+            from  = "@body('Function_메시지_파싱')?['data']?['alertContext']?['condition']?['allOf'][0]?['dimensions']"
+            where = "@equals(item()?['name'], 'resultCode')"
+          }
+          runAfter = {
+            FilterFunctionName = ["Succeeded"]
+          }
+          type = "Query"
+        }
+        Function_메시지_파싱 = {
+          inputs = {
+            content = "@triggerBody()"
+            schema = {
+              properties = {
+                data = {
+                  properties = {
+                    alertContext = {
+                      properties = {
+                        condition = {
+                          properties = {
+                            allOf = {
+                              items = {
+                                properties = {
+                                  dimensions = {
+                                    items = {
+                                      properties = {
+                                        name = {
+                                          type = "string"
+                                        }
+                                        value = {
+                                          type = "string"
+                                        }
+                                      }
+                                      type = "object"
+                                    }
+                                    type = "array"
+                                  }
+                                  metricValue = {
+                                    type = "number"
+                                  }
+                                }
+                                type = "object"
+                              }
+                              type = "array"
+                            }
+                            windowEndTime = {
+                              type = "string"
+                            }
+                            windowStartTime = {
+                              type = "string"
+                            }
+                          }
+                          type = "object"
+                        }
+                      }
+                      type = "object"
+                    }
+                    essentials = {
+                      properties = {
+                        alertRule = {
+                          type = "string"
+                        }
+                        firedDateTime = {
+                          type = "string"
+                        }
+                        investigationLink = {
+                          type = "string"
+                        }
+                        monitorCondition = {
+                          type = "string"
+                        }
+                        monitoringService = {
+                          type = "string"
+                        }
+                        severity = {
+                          type = "string"
+                        }
+                        targetResourceGroup = {
+                          type = "string"
+                        }
+                      }
+                      type = "object"
+                    }
+                  }
+                  type = "object"
+                }
+              }
+              type = "object"
+            }
+          }
+          type = "ParseJson"
+        }
+      }
+    }
+    expression = {
+      and = [{
+        contains = ["@triggerBody()", "workspace_id"]
+        }, {
+        equals = ["", ""]
+      }]
+    }
+    runAfter = {}
+    type     = "If"
+  })
+  logic_app_id = azurerm_logic_app_workflow.res-624.id
+  name         = "메시지_출처_분기"
+}
+resource "azurerm_user_assigned_identity" "res-627" {
+  isolation_scope     = ""
+  location            = "koreacentral"
+  name                = "bioroute-id-8fa7"
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+}
+resource "azurerm_federated_identity_credential" "res-628" {
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = "https://token.actions.githubusercontent.com"
+  name                      = "ccwhfhydm6y6o"
+  parent_id                 = azurerm_user_assigned_identity.res-627.id
+  resource_group_name       = azurerm_resource_group.res-1.name
+  subject                   = "repo:Risk-based-Routing-for-Disease-Control/Risk-based-Routing-for-Disease-Control:ref:refs/heads/WebUI"
+  user_assigned_identity_id = azurerm_user_assigned_identity.res-627.id
+}
+resource "azurerm_storage_account" "res-629" {
+  access_tier                       = "Hot"
+  account_kind                      = "StorageV2"
+  account_replication_type          = "LRS"
+  account_tier                      = "Standard"
+  allow_nested_items_to_be_public   = false
+  allowed_copy_scope                = ""
+  cross_tenant_replication_enabled  = false
+  default_to_oauth_authentication   = false
+  dns_endpoint_type                 = "Standard"
+  edge_zone                         = ""
+  https_traffic_only_enabled        = true
+  infrastructure_encryption_enabled = false
+  is_hns_enabled                    = false
+  large_file_share_enabled          = false
+  local_user_enabled                = true
+  location                          = "koreacentral"
+  min_tls_version                   = "TLS1_2"
+  name                              = "dt4team1blob"
+  nfsv3_enabled                     = false
+  primary_access_key                = "" # Masked sensitive attribute
+  primary_blob_connection_string    = "" # Masked sensitive attribute
+  primary_connection_string         = "" # Masked sensitive attribute
+  provisioned_billing_model_version = ""
+  public_network_access_enabled     = true
+  queue_encryption_key_type         = "Service"
+  resource_group_name               = azurerm_resource_group.res-1.name
+  secondary_access_key              = "" # Masked sensitive attribute
+  secondary_blob_connection_string  = "" # Masked sensitive attribute
+  secondary_connection_string       = "" # Masked sensitive attribute
+  sftp_enabled                      = false
+  shared_access_key_enabled         = true
+  table_encryption_key_type         = "Service"
+  tags                              = {}
+  blob_properties {
+    change_feed_enabled           = false
+    change_feed_retention_in_days = 0
+    default_service_version       = ""
+    last_access_time_enabled      = false
+    versioning_enabled            = false
+  }
+  share_properties {
+    retention_policy {
+      days = 7
+    }
+  }
+}
+resource "azurerm_storage_container" "res-631" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "app-package-dt4-team1-func-collector-926202b"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_storage_container" "res-632" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "archive"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_storage_container" "res-633" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "azure-webjobs-hosts"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_storage_container" "res-634" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "azure-webjobs-secrets"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_storage_container" "res-635" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "model-artifacts"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_storage_container" "res-636" {
+  container_access_type             = "private"
+  default_encryption_scope          = "$account-encryption-key"
+  encryption_scope_override_enabled = true
+  metadata                          = {}
+  name                              = "raw"
+  storage_account_id                = azurerm_storage_account.res-629.id
+  storage_account_name              = ""
+}
+resource "azurerm_api_connection" "res-640" {
+  display_name        = "starboy@officestu.seoultech.ac.kr"
+  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/office365"
+  name                = "office365"
+  parameter_values    = {}
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+}
+resource "azurerm_api_connection" "res-641" {
+  display_name        = "Outlook.com"
+  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/outlook"
+  name                = "outlook"
+  parameter_values    = {}
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+}
+resource "azurerm_api_connection" "res-642" {
+  display_name        = "4dt021@dataschool.msai.kr"
+  managed_api_id      = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/providers/Microsoft.Web/locations/northcentralus/managedApis/teams"
+  name                = "teams"
+  parameter_values    = {}
+  resource_group_name = azurerm_resource_group.res-1.name
+  tags                = {}
+}
+resource "azurerm_service_plan" "res-643" {
+  app_service_environment_id      = ""
+  location                        = "koreacentral"
+  maximum_elastic_worker_count    = 1
+  name                            = "ASP-dt4project2team1-a9bb"
+  os_type                         = "Linux"
+  per_site_scaling_enabled        = false
+  premium_plan_auto_scale_enabled = false
+  resource_group_name             = azurerm_resource_group.res-1.name
+  sku_name                        = "FC1"
+  tags                            = {}
+  worker_count                    = 0
+  zone_balancing_enabled          = false
+}
+resource "azurerm_service_plan" "res-644" {
+  app_service_environment_id      = ""
+  location                        = "koreacentral"
+  maximum_elastic_worker_count    = 1
+  name                            = "dt4-project2-team1"
+  os_type                         = "Linux"
+  per_site_scaling_enabled        = false
+  premium_plan_auto_scale_enabled = false
+  resource_group_name             = azurerm_resource_group.res-1.name
+  sku_name                        = "B1"
+  tags                            = {}
+  worker_count                    = 1
+  zone_balancing_enabled          = false
+}
+resource "azurerm_linux_web_app" "res-645" {
+  app_settings                                   = {}
+  client_affinity_enabled                        = false
+  client_certificate_enabled                     = false
+  client_certificate_exclusion_paths             = ""
+  client_certificate_mode                        = "Required"
+  custom_domain_verification_id                  = "" # Masked sensitive attribute
+  enabled                                        = true
+  ftp_publish_basic_authentication_enabled       = false
+  https_only                                     = true
+  key_vault_reference_identity_id                = "SystemAssigned"
+  location                                       = "koreacentral"
+  name                                           = "bioroute"
+  public_network_access_enabled                  = true
+  resource_group_name                            = azurerm_resource_group.res-1.name
+  service_plan_id                                = azurerm_service_plan.res-644.id
+  site_credential                                = [] # Masked sensitive attribute
+  tags                                           = {}
+  virtual_network_backup_restore_enabled         = false
+  virtual_network_subnet_id                      = ""
+  vnet_image_pull_enabled                        = false
+  webdeploy_publish_basic_authentication_enabled = false
+  zip_deploy_file                                = ""
+  site_config {
+    always_on                                     = false
+    api_definition_url                            = ""
+    api_management_api_id                         = ""
+    app_command_line                              = "bash startup.sh"
+    container_registry_managed_identity_client_id = ""
+    container_registry_use_managed_identity       = false
+    default_documents                             = ["Default.htm", "Default.html", "Default.asp", "index.htm", "index.html", "iisstart.htm", "default.aspx", "index.php", "hostingstart.html"]
+    ftps_state                                    = "FtpsOnly"
+    health_check_eviction_time_in_min             = 0
+    health_check_path                             = ""
+    http2_enabled                                 = false
+    ip_restriction_default_action                 = ""
+    load_balancing_mode                           = "LeastRequests"
+    local_mysql_enabled                           = false
+    managed_pipeline_mode                         = "Integrated"
+    minimum_tls_version                           = "1.2"
+    remote_debugging_enabled                      = false
+    remote_debugging_version                      = ""
+    scm_ip_restriction_default_action             = ""
+    scm_minimum_tls_version                       = "1.2"
+    scm_use_main_ip_restriction                   = false
+    use_32_bit_worker                             = true
+    vnet_route_all_enabled                        = false
+    websockets_enabled                            = false
+    worker_count                                  = 1
+    application_stack {
+      docker_image_name        = ""
+      docker_registry_password = "" # Masked sensitive attribute
+      docker_registry_url      = ""
+      docker_registry_username = ""
+      dotnet_version           = ""
+      go_version               = ""
+      java_server              = ""
+      java_server_version      = ""
+      java_version             = ""
+      node_version             = ""
+      php_version              = ""
+      python_version           = "3.11"
+      ruby_version             = ""
+    }
+  }
+}
+resource "azurerm_app_service_custom_hostname_binding" "res-659" {
+  app_service_name    = "bioroute"
+  hostname            = "bioroute-edagchfvcwfadfa3.koreacentral-01.azurewebsites.net"
+  resource_group_name = azurerm_resource_group.res-1.name
+  ssl_state           = ""
+  thumbprint          = ""
+  depends_on = [
+    azurerm_linux_web_app.res-645,
+  ]
+}
+resource "azurerm_function_app_flex_consumption" "res-660" {
+  app_settings                       = {}
+  client_certificate_enabled         = false
+  client_certificate_exclusion_paths = ""
+  client_certificate_mode            = "Required"
+  custom_domain_verification_id      = "" # Masked sensitive attribute
+  enabled                            = true
+  http_concurrency                   = 0
+  https_only                         = true
+  instance_memory_in_mb              = 2048
+  location                           = "koreacentral"
+  maximum_instance_count             = 100
+  name                               = "dt4-team1-func-collector"
+  public_network_access_enabled      = true
+  resource_group_name                = azurerm_resource_group.res-1.name
+  runtime_name                       = "python"
+  runtime_version                    = "3.11"
+  service_plan_id                    = azurerm_service_plan.res-643.id
+  site_credential                    = [] # Masked sensitive attribute
+  storage_access_key                 = ""
+  storage_authentication_type        = "StorageAccountConnectionString"
+  storage_container_endpoint         = "https://dt4team1blob.blob.core.windows.net/app-package-dt4-team1-func-collector-926202b"
+  storage_container_type             = "blobContainer"
+  storage_user_assigned_identity_id  = ""
+  tags = {
+    "hidden-link: /app-insights-resource-id" = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"
+  }
+  virtual_network_subnet_id                      = ""
+  webdeploy_publish_basic_authentication_enabled = false
+  zip_deploy_file                                = ""
+  site_config {
+    api_definition_url                            = ""
+    api_management_api_id                         = ""
+    app_command_line                              = ""
+    application_insights_connection_string        = "" # Masked sensitive attribute
+    application_insights_key                      = "" # Masked sensitive attribute
+    container_registry_managed_identity_client_id = ""
+    container_registry_use_managed_identity       = false
+    default_documents                             = ["Default.htm", "Default.html", "Default.asp", "index.htm", "index.html", "iisstart.htm", "default.aspx", "index.php"]
+    elastic_instance_minimum                      = 0
+    health_check_eviction_time_in_min             = 0
+    health_check_path                             = ""
+    http2_enabled                                 = false
+    ip_restriction_default_action                 = ""
+    load_balancing_mode                           = "LeastRequests"
+    managed_pipeline_mode                         = "Integrated"
+    minimum_tls_version                           = "1.2"
+    remote_debugging_enabled                      = false
+    remote_debugging_version                      = ""
+    runtime_scale_monitoring_enabled              = false
+    scm_ip_restriction_default_action             = ""
+    scm_minimum_tls_version                       = "1.2"
+    scm_use_main_ip_restriction                   = false
+    use_32_bit_worker                             = false
+    vnet_route_all_enabled                        = false
+    websockets_enabled                            = false
+    worker_count                                  = 1
+    cors {
+      allowed_origins     = ["https://portal.azure.com"]
+      support_credentials = false
+    }
+  }
+}
+resource "azurerm_function_app_function" "res-664" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_compare_outbreaks"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_compare_outbreaks"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_compare_outbreaks"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_compare_outbreaks"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-665" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_disinfection"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_disinfection"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_disinfection"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_disinfection"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-666" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_kahis"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_kahis"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_kahis"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_kahis"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-667" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_match_outbreaks"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_match_outbreaks"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_match_outbreaks"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_match_outbreaks"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-668" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_migratory"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_migratory"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_migratory"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_migratory"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-669" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_outbreak_logs"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_outbreak_logs"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_outbreak_logs"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_outbreak_logs"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-670" {
+  config_json = jsonencode({
+    bindings = [{
+      connection = "BLOB_CONNECTION_STRING"
+      direction  = "IN"
+      name       = "snapshot"
+      path       = "raw/outbreak/snapshot/{name}"
+      type       = "blobTrigger"
+    }]
+    entryPoint        = "fn_outbreak_snapshot_listener"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_outbreak_snapshot_listener"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_outbreak_snapshot_listener"
+  test_data       = ""
+}
+resource "azurerm_function_app_function" "res-671" {
+  config_json = jsonencode({
+    bindings = [{
+      authLevel = "FUNCTION"
+      direction = "IN"
+      name      = "req"
+      route     = "fn_weather"
+      type      = "httpTrigger"
+      }, {
+      direction = "OUT"
+      name      = "$return"
+      type      = "http"
+    }]
+    entryPoint        = "fn_weather"
+    functionDirectory = "/home/site/wwwroot"
+    language          = "python"
+    name              = "fn_weather"
+    scriptFile        = "function_app.py"
+  })
+  enabled         = true
+  function_app_id = azurerm_function_app_flex_consumption.res-660.id
+  language        = ""
+  name            = "fn_weather"
+  test_data       = ""
+}
+resource "azurerm_app_service_custom_hostname_binding" "res-672" {
+  app_service_name    = "dt4-team1-func-collector"
+  hostname            = "dt4-team1-func-collector-d8ehhja4chfabzbq.koreacentral-01.azurewebsites.net"
+  resource_group_name = azurerm_resource_group.res-1.name
+  ssl_state           = ""
+  thumbprint          = ""
+  depends_on = [
+    azurerm_function_app_flex_consumption.res-660,
+  ]
+}
+resource "azurerm_monitor_smart_detector_alert_rule" "res-673" {
+  description         = "Failure Anomalies notifies you of an unusual rise in the rate of failed HTTP requests or dependency calls."
+  detector_type       = "FailureAnomaliesDetector"
+  enabled             = true
+  frequency           = "PT1M"
+  name                = "Failure Anomalies - dt4-team1-func-collector"
+  resource_group_name = azurerm_resource_group.res-1.name
+  scope_resource_ids  = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourcegroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  severity            = "Sev3"
+  tags                = {}
+  throttling_duration = ""
+  action_group {
+    email_subject   = ""
+    ids             = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/a000-aml-rg/providers/Microsoft.Insights/actionGroups/application insights smart detection"]
+    webhook_payload = ""
+  }
+}
+resource "azurerm_monitor_action_group" "res-674" {
+  enabled             = true
+  location            = "eastus"
+  name                = "collection_fail_alert"
+  resource_group_name = azurerm_resource_group.res-1.name
+  short_name          = "수집 실패"
+  tags                = {}
+}
+resource "azurerm_application_insights" "res-675" {
+  application_type                      = "web"
+  connection_string                     = "" # Masked sensitive attribute
+  daily_data_cap_in_gb                  = 100
+  daily_data_cap_notifications_disabled = false
+  disable_ip_masking                    = false
+  force_customer_storage_for_profiler   = false
+  instrumentation_key                   = "" # Masked sensitive attribute
+  internet_ingestion_enabled            = true
+  internet_query_enabled                = true
+  local_authentication_disabled         = false
+  location                              = "koreacentral"
+  name                                  = "dt4-team1-func-collector"
+  resource_group_name                   = azurerm_resource_group.res-1.name
+  retention_in_days                     = 90
+  sampling_percentage                   = 0
+  tags                                  = {}
+  workspace_id                          = "/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/DefaultResourceGroup-SE/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-27db5ec6-d206-4028-b5e1-6004dca5eeef-SE"
+}
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-676" {
+  auto_mitigation_enabled           = false
+  description                       = ""
+  display_name                      = "collection fail"
+  enabled                           = true
+  evaluation_frequency              = "PT1M"
+  location                          = "koreacentral"
+  mute_actions_after_alert_duration = ""
+  name                              = "collection fail"
+  query_time_range_override         = ""
+  resource_group_name               = azurerm_resource_group.res-1.name
+  scopes                            = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  severity                          = 3
+  skip_query_validation             = false
+  tags                              = {}
+  target_resource_types             = ["microsoft.insights/components"]
+  window_duration                   = "PT1M"
+  workspace_alerts_storage_enabled  = false
+  action {
+    action_groups     = ["/subscriptions/27DB5EC6-D206-4028-B5E1-6004DCA5EEEF/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
+    custom_properties = {}
+  }
+  criteria {
+    metric_measure_column   = ""
+    operator                = "GreaterThan"
+    query                   = "requests\n| where resultCode != 200\n| extend functionName = coalesce(\n    tostring(customDimensions[\"FunctionName\"]),\n    tostring(customDimensions[\"functionName\"]),\n    tostring(operation_Name)\n)\n| summarize failures=count() by functionName, resultCode, bin(timestamp, 1m)\n| order by timestamp desc\n"
+    resource_id_column      = ""
+    threshold               = 0
+    time_aggregation_method = "Count"
+    dimension {
+      name     = "functionName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "resultCode"
+      operator = "Include"
+      values   = ["*"]
+    }
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+}
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "res-677" {
+  auto_mitigation_enabled           = false
+  description                       = ""
+  display_name                      = "collection_failure"
+  enabled                           = true
+  evaluation_frequency              = "PT5M"
+  location                          = "koreacentral"
+  mute_actions_after_alert_duration = ""
+  name                              = "collection_failure"
+  query_time_range_override         = ""
+  resource_group_name               = azurerm_resource_group.res-1.name
+  scopes                            = ["/subscriptions/27db5ec6-d206-4028-b5e1-6004dca5eeef/resourceGroups/dt4_project2_team1/providers/microsoft.insights/components/dt4-team1-func-collector"]
+  severity                          = 3
+  skip_query_validation             = false
+  tags                              = {}
+  target_resource_types             = ["microsoft.insights/components"]
+  window_duration                   = "PT5M"
+  workspace_alerts_storage_enabled  = false
+  action {
+    action_groups     = ["/subscriptions/27DB5EC6-D206-4028-B5E1-6004DCA5EEEF/resourceGroups/dt4_project2_team1/providers/microsoft.insights/actionGroups/collector"]
+    custom_properties = {}
+  }
+  criteria {
+    metric_measure_column   = ""
+    operator                = "GreaterThan"
+    query                   = "requests\n| where resultCode == 200\n| extend functionName = coalesce(\n    tostring(customDimensions[\"FunctionName\"]),\n    tostring(customDimensions[\"functionName\"]),\n    tostring(operation_Name)\n)\n| summarize failures=count() by functionName, resultCode, bin(timestamp, 1m)\n| order by timestamp desc\n"
+    resource_id_column      = ""
+    threshold               = 0
+    time_aggregation_method = "Count"
+    dimension {
+      name     = "functionName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+}
